@@ -1,0 +1,31 @@
+{
+    "cpu_core": null,
+    "seed": 128,
+    "device": "cuda",
+    "use_cuda": true,
+    "neuron": 128,
+    "max_episodes": 1000,
+    "episode_length": 500,
+    "batch_size": 512,
+    "lr_actor": 0.0001,
+    "lr_critic": 0.0001,
+    "gamma": 0.8,
+    "tau": 0.001,
+    "policy_delay": 5,
+    "exploration_rate": 1.0,
+    "exploration_decay": 0.999,
+    "exploration_min": 0.1,
+    "ema_beta": 0.95,
+    "gumbel_tau": 1.0,
+    "buffer_size": 1000000,
+    "bits": 1,
+    "group_size": [
+        1,
+        8
+    ],
+    "log_dir": "20250412_012640",
+    "save_data": true,
+    "save_model": true,
+    "load_model": false,
+    "load_model_name": "20241002_113848_model.pth"
+}
