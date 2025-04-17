@@ -69,6 +69,9 @@ class Actor(nn.Module):
         # self.softmax = nn.Softmax(dim=-1)
 
         # ==== Multi USER (K>1) - DEEP ====
+        super(Actor, self).__init__()
+        self.num_groups = num_groups
+        self.num_phases = num_phases
         self.fc1 = nn.Linear(state_dim, neuron)
         self.ln1 = nn.LayerNorm(neuron)
         self.fc2 = nn.Linear(neuron, neuron)
@@ -157,6 +160,9 @@ class Critic(nn.Module):
 
         # ==== Multi USER (K>1) - DEEP ====
         # State pathway
+        super(Critic, self).__init__()
+        self.num_groups = num_groups
+        self.num_phases = num_phases
         self.fc1 = nn.Linear(state_dim, neuron)
         self.ln1 = nn.LayerNorm(neuron)
         self.fc2 = nn.Linear(neuron, neuron)
