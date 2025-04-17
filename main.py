@@ -1540,7 +1540,7 @@ if __name__ == '__main__':
         parser.add_argument('--device', choices=['cuda', 'cpu'], default='cuda' if torch.cuda.is_available() else 'cpu', type=str)
         parser.add_argument('--use_cuda', default=True, type=bool)
 
-        parser.add_argument('--neuron', default=512, type=int, help='Number of neurons in each layer')
+        parser.add_argument('--neuron', default=128, type=int, help='Number of neurons in each layer')
         parser.add_argument('--max_episodes', default=1000, type=int)           # 800 timeslot, default:501, train 0.7 testint 0.3
         parser.add_argument('--episode_length', default=800, type=int)         # 400, temp_step
         parser.add_argument('--batch_size', default=512, type=int)              # batch size, 16 32 64 128

@@ -298,7 +298,7 @@ def main():
     init_display_settings()
 
     # 動態部分, 時間戳與類型
-    dynamic_time = '20250412_011412_seed_128'
+    dynamic_time = '20250415_160929_seed_128'
     dynamic_type = 'training'  # training or testing
 
     # 動態生成 CSV 文件路徑

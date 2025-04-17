@@ -56,18 +56,29 @@ class Actor(nn.Module):
         # self.softmax = nn.Softmax(dim=-1)
 
         # ==== Multi USER (K>1) ====
-        super(Actor, self).__init__()
-        self.num_groups = num_groups
-        self.num_phases = num_phases
+        # super(Actor, self).__init__()
+        # self.num_groups = num_groups
+        # self.num_phases = num_phases
+        # self.fc1 = nn.Linear(state_dim, neuron)
+        # self.ln1 = nn.LayerNorm(neuron)
+        # self.fc2 = nn.Linear(neuron, neuron)
+        # self.ln2 = nn.LayerNorm(neuron)
+        # self.fc3 = nn.Linear(neuron, neuron // 2)
+        # self.ln3 = nn.LayerNorm(neuron // 2)
+        # self.fc4 = nn.Linear(neuron // 2, num_groups * num_phases)
+        # self.softmax = nn.Softmax(dim=-1)
+
+        # ==== Multi USER (K>1) - DEEP ====
         self.fc1 = nn.Linear(state_dim, neuron)
         self.ln1 = nn.LayerNorm(neuron)
         self.fc2 = nn.Linear(neuron, neuron)
         self.ln2 = nn.LayerNorm(neuron)
         self.fc3 = nn.Linear(neuron, neuron // 2)
         self.ln3 = nn.LayerNorm(neuron // 2)
-        self.fc4 = nn.Linear(neuron // 2, num_groups * num_phases)
+        self.fc4 = nn.Linear(neuron // 2, neuron // 4)
+        self.ln4 = nn.LayerNorm(neuron // 4)
+        self.fc5 = nn.Linear(neuron // 4, num_groups * num_phases)
         self.softmax = nn.Softmax(dim=-1)
-
 
     def forward(self, state):
 
@@ -81,11 +92,20 @@ class Actor(nn.Module):
         # x = x.view(-1, self.num_groups, self.num_phases)  # **確保輸出 shape 為 (batch, num_groups, num_phases)**
         # return self.softmax(x)  # **返回每個群組的 phase 機率**
     
-        # ==== Multi USER (K>1) ====
-        x = torch.relu(self.fc1(state))
-        x = torch.relu(self.fc2(x))
-        x = torch.relu(self.fc3(x))
-        x = self.fc4(x)
+        # # ==== Multi USER (K>1) ====
+        # x = torch.relu(self.fc1(state))
+        # x = torch.relu(self.fc2(x))
+        # x = torch.relu(self.fc3(x))
+        # x = self.fc4(x)
+        # x = x.view(-1, self.num_groups, self.num_phases)
+        # return self.softmax(x)
+
+        # ==== Multi USER (K>1) - DEEP ====
+        x = torch.relu(self.ln1(self.fc1(state)))
+        x = torch.relu(self.ln2(self.fc2(x)))
+        x = torch.relu(self.ln3(self.fc3(x)))
+        x = torch.relu(self.ln4(self.fc4(x)))
+        x = self.fc5(x)
         x = x.view(-1, self.num_groups, self.num_phases)
         return self.softmax(x)
 
@@ -119,21 +139,40 @@ class Critic(nn.Module):
         # self.fc4 = nn.Linear(neuron, 1)
 
         # ==== Multi USER (K>1) ====
-        super(Critic, self).__init__()
-        self.num_groups = num_groups
-        self.num_phases = num_phases
+        # super(Critic, self).__init__()
+        # self.num_groups = num_groups
+        # self.num_phases = num_phases
+        # self.fc1 = nn.Linear(state_dim, neuron)
+        # self.ln1 = nn.LayerNorm(neuron)
+        # self.fc2 = nn.Linear(neuron, neuron)
+        # self.ln2 = nn.LayerNorm(neuron)
+        # self.action_embedding = nn.Embedding(num_phases, 16)
+        # self.fc_action1 = nn.Linear(num_groups * 16, neuron)
+        # self.ln_action1 = nn.LayerNorm(neuron)
+        # self.fc_action2 = nn.Linear(neuron, neuron)
+        # self.ln_action2 = nn.LayerNorm(neuron)
+        # self.fc3 = nn.Linear(neuron * 2, neuron)
+        # self.ln3 = nn.LayerNorm(neuron)
+        # self.fc4 = nn.Linear(neuron, 1)
+
+        # ==== Multi USER (K>1) - DEEP ====
+        # State pathway
         self.fc1 = nn.Linear(state_dim, neuron)
         self.ln1 = nn.LayerNorm(neuron)
         self.fc2 = nn.Linear(neuron, neuron)
         self.ln2 = nn.LayerNorm(neuron)
+        self.fc3 = nn.Linear(neuron, neuron // 2)
+        self.ln3 = nn.LayerNorm(neuron // 2)
+        # Action pathway
         self.action_embedding = nn.Embedding(num_phases, 16)
         self.fc_action1 = nn.Linear(num_groups * 16, neuron)
         self.ln_action1 = nn.LayerNorm(neuron)
-        self.fc_action2 = nn.Linear(neuron, neuron)
-        self.ln_action2 = nn.LayerNorm(neuron)
-        self.fc3 = nn.Linear(neuron * 2, neuron)
-        self.ln3 = nn.LayerNorm(neuron)
-        self.fc4 = nn.Linear(neuron, 1)
+        self.fc_action2 = nn.Linear(neuron, neuron // 2)
+        self.ln_action2 = nn.LayerNorm(neuron // 2)
+        # Merge pathway
+        self.fc4 = nn.Linear(neuron, neuron // 2)
+        self.ln4 = nn.LayerNorm(neuron // 2)
+        self.fc5 = nn.Linear(neuron // 2, 1)
 
     def forward_with_soft_action(self, state, soft_action):
         """
@@ -168,16 +207,29 @@ class Critic(nn.Module):
         # return self.fc4(x)
     
         # ==== Multi USER (K>1) ====
+        # x_s = torch.relu(self.ln1(self.fc1(state)))
+        # x_s = torch.relu(self.ln2(self.fc2(x_s)))
+        # embed_weights = self.action_embedding.weight
+        # soft_embed = torch.matmul(soft_action, embed_weights)
+        # x_a = soft_embed.view(soft_embed.shape[0], -1)
+        # x_a = torch.relu(self.ln_action1(self.fc_action1(x_a)))
+        # x_a = torch.relu(self.ln_action2(self.fc_action2(x_a)))
+        # x = torch.cat([x_s, x_a], dim=-1)
+        # x = torch.relu(self.ln3(self.fc3(x)))
+        # return self.fc4(x)
+    
+        # ==== Multi USER (K>1) - DEEP ====
         x_s = torch.relu(self.ln1(self.fc1(state)))
         x_s = torch.relu(self.ln2(self.fc2(x_s)))
+        x_s = torch.relu(self.ln3(self.fc3(x_s)))
         embed_weights = self.action_embedding.weight
         soft_embed = torch.matmul(soft_action, embed_weights)
         x_a = soft_embed.view(soft_embed.shape[0], -1)
         x_a = torch.relu(self.ln_action1(self.fc_action1(x_a)))
         x_a = torch.relu(self.ln_action2(self.fc_action2(x_a)))
         x = torch.cat([x_s, x_a], dim=-1)
-        x = torch.relu(self.ln3(self.fc3(x)))
-        return self.fc4(x)
+        x = torch.relu(self.ln4(self.fc4(x)))
+        return self.fc5(x)
 
     def forward(self, state, action):
         """
@@ -208,17 +260,28 @@ class Critic(nn.Module):
         # return self.fc4(x)
         
         # ==== Multi USER (K>1) ====
+        # x_s = torch.relu(self.ln1(self.fc1(state)))
+        # x_s = torch.relu(self.ln2(self.fc2(x_s)))
+        # x_a = self.action_embedding(action)
+        # x_a = x_a.view(x_a.shape[0], -1)
+        # x_a = torch.relu(self.ln_action1(self.fc_action1(x_a)))
+        # x_a = torch.relu(self.ln_action2(self.fc_action2(x_a)))
+        # x = torch.cat([x_s, x_a], dim=-1)
+        # x = torch.relu(self.ln3(self.fc3(x)))
+        # return self.fc4(x)
+
+        # ==== Multi USER (K>1) - DEEP ====
         x_s = torch.relu(self.ln1(self.fc1(state)))
         x_s = torch.relu(self.ln2(self.fc2(x_s)))
+        x_s = torch.relu(self.ln3(self.fc3(x_s)))
         x_a = self.action_embedding(action)
         x_a = x_a.view(x_a.shape[0], -1)
         x_a = torch.relu(self.ln_action1(self.fc_action1(x_a)))
         x_a = torch.relu(self.ln_action2(self.fc_action2(x_a)))
         x = torch.cat([x_s, x_a], dim=-1)
-        x = torch.relu(self.ln3(self.fc3(x)))
-        return self.fc4(x)
+        x = torch.relu(self.ln4(self.fc4(x)))
+        return self.fc5(x) 
 
-    
 class ReplayBuffer:
     def __init__(self, buffer_size, K, state_dim, action_dim, device):
         self.max_size = buffer_size  # 確保 max_size 變數正確命名
