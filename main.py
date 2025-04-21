@@ -1540,7 +1540,7 @@ if __name__ == '__main__':
         parser.add_argument('--device', choices=['cuda', 'cpu'], default='cuda' if torch.cuda.is_available() else 'cpu', type=str)
         parser.add_argument('--use_cuda', default=True, type=bool)
 
-        parser.add_argument('--neuron', default=128, type=int, help='Number of neurons in each layer')
+        parser.add_argument('--neuron', default=64, type=int, help='Number of neurons in each layer')
         parser.add_argument('--max_episodes', default=1000, type=int)           # 800 timeslot, default:501, train 0.7 testint 0.3
         parser.add_argument('--episode_length', default=800, type=int)         # 400, temp_step
         parser.add_argument('--batch_size', default=512, type=int)              # batch size, 16 32 64 128
@@ -1571,7 +1571,7 @@ if __name__ == '__main__':
                 但如果每個 timeslot 獨立運作, 則 gamma 設低 (gamma = 0.90 或 0.95) 可能更合理
         '''
 
-        parser.add_argument('--tau', default=0.001, type=int)                   
+        parser.add_argument('--tau', default=0.1, type=int)                   
         '''
             tau 越大 (如 tau = 0.01 或 0.05):
                 目標網路更新得快, 變得和當前網路更接近
@@ -1587,15 +1587,15 @@ if __name__ == '__main__':
                     Critic loss 變化很大, 需要讓目標網路穩定學習
                     發現梯度爆炸或 loss 劇烈變化時
         '''
-        parser.add_argument('--policy_delay', default=5, type=int)              # 5, 每間隔 policy_delay 次更新 Actor
+        parser.add_argument('--policy_delay', default=40, type=int)              # 5, 每間隔 policy_delay 次更新 Actor
 
         parser.add_argument('--exploration_rate', default=1.0, type=float)        # 1.0, 初始 100% 探索, 完全隨機選擇 phase, 幫助 RL 發現較好的動作
-        parser.add_argument('--exploration_decay', default=0.995, type=float)     # 0.995, 每次訓練後探索率乘上這個值, 越高表示探索階段會更長
+        parser.add_argument('--exploration_decay', default=0.9995, type=float)     # 0.995, 每次訓練後探索率乘上這個值, 越高表示探索階段會更長
         parser.add_argument('--exploration_min', default= 0.1, type=float)       # 0.05, 最低探索率, 幾乎選擇最好的動作
-        parser.add_argument('--ema_beta', default=0.8, type=float)                # 0.9, Exponential Moving Average (EMA) beta, 用來平滑 actor 和 critic 的 loss
-        parser.add_argument('--gumbel_tau', default=1.0, type=float)        # Gumbel softmax temperature, 1.0
+        parser.add_argument('--ema_beta', default=0.9, type=float)                # 0.9, Exponential Moving Average (EMA) beta, 用來平滑 actor 和 critic 的 loss
+        parser.add_argument('--gumbel_tau', default=0.5, type=float)        # Gumbel softmax temperature, 1.0
 
-        parser.add_argument('--buffer_size', default=int(1e7), type=int)        # buffer_size與batch_size對應: 1e4(64), 1e5(128), 1e6(256)
+        parser.add_argument('--buffer_size', default=int(1e5), type=int)        # buffer_size與batch_size對應: 1e4(64), 1e5(128), 1e6(256)
         # parser.add_argument('--exploration_noise', default=0.1, type=float)     # exploration noise, 0.1
         
         # parser.add_argument('--mu', default=0.0, type=float)
