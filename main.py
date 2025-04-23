@@ -1348,18 +1348,18 @@ def main(args):
     #     d_ris_elem=d_ris_elem
     # )
 
-    # 將RIS元素分成G個群組, 每組共享相同的phase, 遍歷所有組合, 計算每種組合的SINR和Datarate
-    block_wise_phase_grouping(
-        channel=channel,
-        beamformer=beamformer,
-        scenario=scenario,
-        folder_name=folder_name,
-        num_elements=num_elements,
-        K=K,
-        device=args.device,
-        count_tmp=count_tmp,
-        args=args
-    )
+    # # 將RIS元素分成G個群組, 每組共享相同的phase, 遍歷所有組合, 計算每種組合的SINR和Datarate
+    # block_wise_phase_grouping(
+    #     channel=channel,
+    #     beamformer=beamformer,
+    #     scenario=scenario,
+    #     folder_name=folder_name,
+    #     num_elements=num_elements,
+    #     K=K,
+    #     device=args.device,
+    #     count_tmp=count_tmp,
+    #     args=args
+    # )
 
     # # 基於已知高SINR phase增添擾動擴展探索, 取得鄰近高SINR phase組合, 隨後計算高SINR組合的數量
     # known_highSINR_phase_sampling(
@@ -1541,13 +1541,13 @@ if __name__ == '__main__':
         parser.add_argument('--use_cuda', default=True, type=bool)
 
         parser.add_argument('--neuron', default=256, type=int, help='Number of neurons in each layer')
-        parser.add_argument('--max_episodes', default=1000, type=int)           # 800 timeslot, default:501, train 0.7 testint 0.3
-        parser.add_argument('--episode_length', default=800, type=int)         # 400, temp_step
+        parser.add_argument('--max_episodes', default=600, type=int)           # 800 timeslot, default:501, train 0.7 testint 0.3
+        parser.add_argument('--episode_length', default=300, type=int)         # 400, temp_step
         parser.add_argument('--batch_size', default=512, type=int)              # batch size, 16 32 64 128
         
         # parser.add_argument('--lr', default=0.005, type=float)                   # learning rate: 0.1
-        parser.add_argument('--lr_actor', default=5e-4, type=float)           # Actor 學習率
-        parser.add_argument('--lr_critic', default=5e-4, type=float)           # Critic 學習率, 通常比 actor 大 10 倍
+        parser.add_argument('--lr_actor', default=5e-3, type=float)           # Actor 學習率
+        parser.add_argument('--lr_critic', default=5e-3, type=float)           # Critic 學習率, 通常比 actor 大 10 倍
         '''
             lr_actor (Actor 學習率):
                 越大 >> Actor 會更快更新策略, 但可能導致不穩定的策略變動 (容易來回震盪)
@@ -1558,7 +1558,7 @@ if __name__ == '__main__':
         '''
 
         # parser.add_argument('--alpha', default=0.3, type=float)                # entropy term coefficient: 0.1
-        parser.add_argument('--gamma', default=0.8, type=float)                # Bellman Equation 中的 gamma, 是 discount factor
+        parser.add_argument('--gamma', default=1.0, type=float)                # Bellman Equation 中的 gamma, 是 discount factor
         '''
             如果 gamma 越大 (接近 1.0), 代表 RL 更關心未來的 reward:
                 適合長期影響較大的問題, 例如每個 RIS phase 調整都會影響接下來許多時刻
@@ -1571,7 +1571,7 @@ if __name__ == '__main__':
                 但如果每個 timeslot 獨立運作, 則 gamma 設低 (gamma = 0.90 或 0.95) 可能更合理
         '''
 
-        parser.add_argument('--tau', default=0.01, type=int)                   
+        parser.add_argument('--tau', default=0.005, type=int)                   
         '''
             tau 越大 (如 tau = 0.01 或 0.05):
                 目標網路更新得快, 變得和當前網路更接近
@@ -1587,13 +1587,13 @@ if __name__ == '__main__':
                     Critic loss 變化很大, 需要讓目標網路穩定學習
                     發現梯度爆炸或 loss 劇烈變化時
         '''
-        parser.add_argument('--policy_delay', default=50, type=int)              # 5, 每間隔 policy_delay 次更新 Actor
+        parser.add_argument('--policy_delay', default=20, type=int)              # 5, 每間隔 policy_delay 次更新 Actor
 
         parser.add_argument('--exploration_rate', default=1.0, type=float)        # 1.0, 初始 100% 探索, 完全隨機選擇 phase, 幫助 RL 發現較好的動作
-        parser.add_argument('--exploration_decay', default=0.995, type=float)     # 0.995, 每次訓練後探索率乘上這個值, 越高表示探索階段會更長
+        parser.add_argument('--exploration_decay', default=0.9995, type=float)     # 0.995, 每次訓練後探索率乘上這個值, 越高表示探索階段會更長
         parser.add_argument('--exploration_min', default= 0.1, type=float)       # 0.05, 最低探索率, 幾乎選擇最好的動作
-        parser.add_argument('--ema_beta', default=0.8, type=float)                # 0.9, Exponential Moving Average (EMA) beta, 用來平滑 actor 和 critic 的 loss
-        parser.add_argument('--gumbel_tau', default=1.0, type=float)        # Gumbel softmax temperature, 1.0
+        parser.add_argument('--ema_beta', default=0.1, type=float)                # 0.9, Exponential Moving Average (EMA) beta, 用來平滑 actor 和 critic 的 loss
+        parser.add_argument('--gumbel_tau', default=0.1, type=float)        # Gumbel softmax temperature, 1.0
 
         parser.add_argument('--buffer_size', default=int(1e7), type=int)        # buffer_size與batch_size對應: 1e4(64), 1e5(128), 1e6(256)
         # parser.add_argument('--exploration_noise', default=0.1, type=float)     # exploration noise, 0.1
