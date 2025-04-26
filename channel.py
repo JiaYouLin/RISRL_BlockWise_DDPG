@@ -38,6 +38,7 @@ class Channel(Environment):
         device: str,
         MU_dist: str,
         rand_seed: int = None,
+        args = None,
         # rand_seed: int = 128,
     ):
         """The object describing the channels in the simulation environment.
@@ -66,6 +67,8 @@ class Channel(Environment):
             torch.manual_seed(self.rand_seed)
             if torch.cuda.is_available():
                 torch.cuda.manual_seed_all(self.rand_seed)
+
+        self.fixed_ue = getattr(args, 'fixed_ue', False) if args is not None else False
 
         super().__init_environment__()
         self.__init_channel__()

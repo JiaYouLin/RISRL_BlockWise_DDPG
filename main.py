@@ -1027,6 +1027,7 @@ def main(args):
         device = args.device,
         MU_dist = MU_mode,
         rand_seed = args.seed,
+        args = args,
     )
     beamformer = Beamformer(device = args.device)
 
@@ -1540,7 +1541,7 @@ if __name__ == '__main__':
         parser.add_argument('--device', choices=['cuda', 'cpu'], default='cuda' if torch.cuda.is_available() else 'cpu', type=str)
         parser.add_argument('--use_cuda', default=True, type=bool)
 
-        # parser.add_argument('--fixed_ue', default=True, action='store_true', help='Use fixed UE positions')
+        parser.add_argument('--fixed_ue', default=True, action='store_true', help='Use fixed UE positions')
         parser.add_argument('--neuron', default=256, type=int, help='Number of neurons in each layer')
         parser.add_argument('--max_episodes', default=2000, type=int)           # 800 timeslot, default:501, train 0.7 testint 0.3
         parser.add_argument('--episode_length', default=1000, type=int)         # 400, temp_step

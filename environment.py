@@ -493,6 +493,51 @@ class Environment:
         """Initialize user positions."""
         if self.MU_pos is None:
             device = self.device
+
+            logi = hasattr(self, 'fixed_ue')
+            print(f'Fixed UE positions: {self.fixed_ue}')
+            print(f'hasattr(self, fixed_ue): {logi}')
+
+            # 先判斷 fixed_ue
+            if hasattr(self, 'fixed_ue') and self.fixed_ue:  
+
+                # 這個 self.fixed_ue 會從 args 傳進來 (等下教你main要加哪裡)
+                print("Fixed UE positions enabled.")
+                
+                # =====生成的UE形成斜線=====
+                # # 自訂固定的 UE 座標，比如你要均勻排在一條線、方形，或是自己設
+                # # 下面是一個範例，假設在 [-5,5] x [-5,5] 的正方形中平均排 K_expect 個
+                # x = torch.linspace(10.5, 14.5, steps=self.K_expect, device=device)
+                # y = torch.linspace(35, 40, steps=self.K_expect, device=device)
+                # # 只保留前 K_expect 個
+                # self.MU_pos = torch.stack((x, y), dim=1)[:self.K_expect]
+                # # print(f"MU_pos: {MU_pos}")
+
+                # =====直接指定每個 UE 的 (x,y) 座標=====
+                fixed_positions = [
+                    (10, 35),   # UE1
+                    (12, 33),   # UE2
+                    (14, 37),   # UE3
+                    (13, 32),   # UE4
+                    (18, 39),   # UE5
+                    # ...依你需求，繼續列下去
+                ]
+                # 要轉成 tensor
+                MU_pos = torch.tensor(fixed_positions, dtype=torch.float32, device=self.device)
+                if len(MU_pos) < self.K_expect:
+                    print(f"Warning: Fixed UE positions only provided {len(MU_pos)} points, but K_expect={self.K_expect}")
+                # 只保留前 K_expect 個
+                self.MU_pos = MU_pos[:self.K_expect]
+                # print(f"MU_pos: {MU_pos}")
+
+                self.K = len(self.MU_pos)
+
+                assert self.K == self.K_expect
+
+                print(f"Fixed UE positions generated. Number of MUs: {self.K}")
+                return   # 這邊直接結束，不需要進入下面 while 的撒點邏輯
+
+            # 如果不是固定UE, 就走原本的撒點
             while (self.MU_pos is None) or (len(self.MU_pos) < self.K_expect):          # 當 self.MU_pos 的長度小於期望的UE數量 self.K_expect 時, 會進入迴圈重新生成UE位置, 直到達到預期的數量
                 if self.MU_dist == "poisson":  # Poisson point process
                     
@@ -545,6 +590,7 @@ class Environment:
                 else:
                     self.MU_pos = torch.cat([self.MU_pos, MU_pos[included, :]], dim=0)
             self.MU_pos = self.MU_pos[:self.K_expect]
+            # print(f"MU_pos: {self.MU_pos}")
             self.K = len(self.MU_pos)
             assert self.K == self.K_expect
             # print(f"Number of MUs: {self.K}")
