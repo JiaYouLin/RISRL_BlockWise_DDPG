@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 
-def get_phase_cconfig(args):
+def get_phase_config(args):
 
     num_phases = 2 ** args.bits
     # print(f"main.py/get_phases_discrete || num_phases_global: {num_phases}")

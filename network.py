@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import os
 from math import pi
-from phase_setting import get_phase_cconfig
+from phase_setting import get_phase_config
 
 def init_display_settings():
     np.set_printoptions(

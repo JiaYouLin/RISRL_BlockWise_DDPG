@@ -9,7 +9,7 @@ import random
 from math import pi
 from collections import deque
 from network import Actor, Critic, ReplayBuffer
-from phase_setting import get_phase_cconfig
+from phase_setting import get_phase_config
 import copy
 
 def init_display_settings():
@@ -123,7 +123,7 @@ class DDPGAgent:
         self.memory = ReplayBuffer(args.buffer_size, K, state_dim, num_groups, self.device)
 
         # 取得離散 phase 設定
-        self.num_phases, self.phases_discrete = get_phase_cconfig(args)
+        self.num_phases, self.phases_discrete = get_phase_config(args)
 
         # 動態 Reward 標準化
         self.ema_scaler = EMARewardScaler(args)
