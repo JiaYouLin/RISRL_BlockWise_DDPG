@@ -11,7 +11,7 @@ from channel import Channel, Beamformer
 from utils import scenario_configs
 from typing import Tuple, Union
 from utils import gpu, scenario_configs, scenario
-from phase_setting import get_phase_cconfig
+from phase_setting import get_phase_config
 
 from math import pi
 
@@ -119,7 +119,7 @@ def Phase_state(episode, channel, beamformer, folder_name, num_elements, group_m
     # print(f'RISdata.py/Phase_state || device: {args.device}\n')
     # print(f'RISdata.py/Phase_state || device: {channel.device}\n')
 
-    num_phases, phases_discrete = get_phase_cconfig(args)
+    num_phases, phases_discrete = get_phase_config(args)
     print(f"agent.py/init || num_phases: {num_phases}")
     print(f"agent.py/init || phases_discrete: {phases_discrete}")
 
