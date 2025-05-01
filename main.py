@@ -1542,10 +1542,10 @@ if __name__ == '__main__':
         parser.add_argument('--use_cuda', default=True, type=bool)
 
         parser.add_argument('--fixed_ue', default=True, action='store_true', help='Use fixed UE positions')
-        parser.add_argument('--neuron', default=64, type=int, help='Number of neurons in each layer')
+        parser.add_argument('--neuron', default=256, type=int, help='Number of neurons in each layer')
         parser.add_argument('--max_episodes', default=1000, type=int)           # 800 timeslot, default:501, train 0.7 testint 0.3
         parser.add_argument('--episode_length', default=800, type=int)         # 400, temp_step
-        parser.add_argument('--batch_size', default=128, type=int)              # batch size, 16 32 64 128
+        parser.add_argument('--batch_size', default=512, type=int)              # batch size, 16 32 64 128
         
         # parser.add_argument('--lr', default=0.005, type=float)                   # learning rate: 0.1
         parser.add_argument('--lr_actor', default=5e-4, type=float)           # Actor 學習率
@@ -1560,7 +1560,7 @@ if __name__ == '__main__':
         '''
 
         # parser.add_argument('--alpha', default=0.3, type=float)                # entropy term coefficient: 0.1
-        parser.add_argument('--gamma', default=0.2, type=float)                # Bellman Equation 中的 gamma, 是 discount factor
+        parser.add_argument('--gamma', default=0.8, type=float)                # Bellman Equation 中的 gamma, 是 discount factor
         '''
             如果 gamma 越大 (接近 1.0), 代表 RL 更關心未來的 reward:
                 適合長期影響較大的問題, 例如每個 RIS phase 調整都會影響接下來許多時刻
@@ -1573,7 +1573,7 @@ if __name__ == '__main__':
                 但如果每個 timeslot 獨立運作, 則 gamma 設低 (gamma = 0.90 或 0.95) 可能更合理
         '''
 
-        parser.add_argument('--tau', default=0.001, type=int)                   
+        parser.add_argument('--tau', default=0.01, type=int)                   
         '''
             tau 越大 (如 tau = 0.01 或 0.05):
                 目標網路更新得快, 變得和當前網路更接近
@@ -1594,7 +1594,7 @@ if __name__ == '__main__':
         parser.add_argument('--exploration_rate', default=1.0, type=float)        # 1.0, 初始 100% 探索, 完全隨機選擇 phase, 幫助 RL 發現較好的動作
         parser.add_argument('--exploration_decay', default=0.995, type=float)     # 0.995, 每次訓練後探索率乘上這個值, 越高表示探索階段會更長
         parser.add_argument('--exploration_min', default= 0.1, type=float)       # 0.05, 最低探索率, 幾乎選擇最好的動作
-        parser.add_argument('--ema_beta', default=0.2, type=float)                # 0.9, Exponential Moving Average (EMA) beta, 用來平滑 actor 和 critic 的 loss, 若越接近1表示記憶效果越長久(長期平均), 平滑程度高, 會以緩慢的速度逐漸追上新的reward; 越接近0表示更注重當前值(短期反應), 變動大, 會以較快的速度逐漸追上新的reward
+        parser.add_argument('--ema_beta', default=0.8, type=float)                # 0.9, Exponential Moving Average (EMA) beta, 用來平滑 actor 和 critic 的 loss, 若越接近1表示記憶效果越長久(長期平均), 平滑程度高, 會以緩慢的速度逐漸追上新的reward; 越接近0表示更注重當前值(短期反應), 變動大, 會以較快的速度逐漸追上新的reward
         parser.add_argument('--gumbel_tau', default=1.0, type=float)        # Gumbel softmax temperature, 1.0
 
         parser.add_argument('--buffer_size', default=int(1e7), type=int)        # buffer_size與batch_size對應: 1e4(64), 1e5(128), 1e6(256)
