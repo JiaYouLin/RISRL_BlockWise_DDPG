@@ -104,6 +104,10 @@ class DDPGAgent:
         self.critic = Critic(state_dim, num_groups, num_phases, neuron).to(self.device)
         self.target_actor = Actor(state_dim, num_groups, num_phases, neuron).to(self.device)
         self.target_critic = Critic(state_dim, num_groups, num_phases, neuron).to(self.device)
+        self.target_actor.load_state_dict(self.actor.state_dict())
+        self.target_critic.load_state_dict(self.critic.state_dict())
+        self.target_actor.eval()
+        self.target_critic.eval()
 
         # 目標網路初始化為當前網路
         self.update_target_networks(tau=1.0)

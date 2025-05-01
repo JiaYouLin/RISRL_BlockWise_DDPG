@@ -85,7 +85,7 @@ class Actor(nn.Module):
         # self.fc4 = nn.Linear(neuron, num_groups * num_phases)
         # self.softmax = nn.Softmax(dim=-1)
 
-        # ==== 組合 3：多層、不同神經元數 ====
+        # # ==== 組合 3：多層、不同神經元數 ====
         # super(Actor, self).__init__()
         # self.num_groups = num_groups
         # self.num_phases = num_phases
@@ -284,7 +284,7 @@ class Critic(nn.Module):
         # self.fc4 = nn.Linear(neuron * 2, neuron)
         # self.fc5 = nn.Linear(neuron, 1)
 
-        # # ==== 組合 1：少層、同神經元數 ====
+        # # ====  組合 1：少層、同神經元數 ====
         # super(Critic, self).__init__()
         # self.action_embedding = nn.Embedding(num_phases, 16)
         # self.fc1 = nn.Linear(state_dim, neuron)
