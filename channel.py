@@ -58,7 +58,9 @@ class Channel(Environment):
         """
         # Initialize
         super().__init__(wavelength, d_ris_elem, ris_center, ris_norm, ris_size, area, BS_pos, M, K, device, MU_dist, rand_seed)
-        
+
+        self.d_ris_elem = d_ris_elem
+
         self.rand_seed = rand_seed
         if self.rand_seed is not None:
             # 設定全局隨機種子
