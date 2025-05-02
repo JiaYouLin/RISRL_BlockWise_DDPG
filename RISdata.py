@@ -239,41 +239,42 @@ def Phase_state(episode, channel, beamformer, folder_name, num_elements, group_m
         if UE_pos.shape[1] == 2:
             ue_z = torch.zeros((UE_pos.shape[0], 1), device=args.device)
             UE_pos = torch.cat([UE_pos, ue_z], dim=1)
-
         UE_center = torch.mean(UE_pos, dim=0, keepdim=True)
-        print(f'BS_pos: {BS_pos}')
-        print(f'RIS_pos (first 5): {RIS_pos[:5]}')
-        print(f'UE_center: {UE_center}')
 
-        # Step 2: Compute vectors
-        v_in = F.normalize(RIS_pos - BS_pos, dim=1)        # BS → RIS
-        v_out = F.normalize(UE_center - RIS_pos, dim=1)    # RIS → UE center
-        v_total = v_in + v_out
-        print(f'[Phase_state] v_in: {v_in}')
-        print(f'[Phase_state] v_out: {v_out}')
-        print(f'[Phase_state] v_total: {v_total}')
+        # Step 2: Compute geometric path length
+        dist_bs_ris = torch.norm(RIS_pos - BS_pos, dim=1)
+        dist_ris_ue = torch.norm(RIS_pos - UE_center, dim=1)
+        total_path = dist_bs_ris + dist_ris_ue
 
-        # Step 3: Phase shift from projection
-        path_diff = (RIS_pos * v_total).sum(dim=1)         # 投影到方向向量上
+        # print(f'[Phase_state] UE_center: {UE_center}')
+        # print(f'[Phase_state] dist_ris_ue[:5]: {dist_ris_ue[:5]}')
+        # print(f'[Phase_state] dist_bs_ris[:5]: {dist_bs_ris[:5]}')
+        # print(f'[Phase_state] total_path[:5]: {total_path[:5]}')
+
+        # Step 3: Phase shift from total path length
         wavelength = channel.wavelength
-        theta = -2 * np.pi * path_diff / wavelength
+        theta = -2 * np.pi * total_path / wavelength
+
+        # 強制將 theta 映射回 [0, 2π)
+        theta = theta % (2 * np.pi)
 
         # Step 4: Discretize phase
         if isinstance(phases_discrete, np.ndarray):
             phases_discrete = torch.tensor(phases_discrete, dtype=torch.float32, device=args.device)
         else:
             phases_discrete = phases_discrete.to(args.device)
+
         theta_discrete_idx = torch.argmin(torch.abs(theta.view(-1, 1) - phases_discrete), dim=1)
-        theta_final = phases_discrete[theta_discrete_idx]
+        theta_radians = phases_discrete[theta_discrete_idx]
+        theta_radians = theta_radians.unsqueeze(0)
         torch.set_printoptions(threshold=float('inf'))
-        print(f'[Phase_state] theta_final: {theta_final}')
+        print(f'RISdata.py/Phase_state || theta_radians BEFORE adjustment: {theta_radians}')
 
         # Step 5: Convert to complex
-        theta_complex = torch.polar(torch.ones_like(theta_final), theta_final).reshape(1, num_elements)
-        # print(f'[Phase_state] theta_complex: {theta_complex}')
-        exit()
+        theta_complex = torch.polar(torch.ones_like(theta_radians), theta_radians).reshape(1, num_elements)
+
     else:
-        raise ValueError(f"[Phase_state] Unsupported phase_init_mode: {args.phase_init_mode}")
+        raise ValueError(f"RISdata.py/Phase_state || Unsupported phase_init_mode: {args.phase_init_mode}")
 
     Z_theta = Z_switch * theta_complex
     # print(f'RISdata.py/Phase_state || Z_theta: {Z_theta}\n')

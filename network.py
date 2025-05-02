@@ -75,15 +75,15 @@ class Actor(nn.Module):
         # self.fc3 = nn.Linear(neuron, num_groups * num_phases)
         # self.softmax = nn.Softmax(dim=-1)
 
-        # # ==== 組合 2：多層、同神經元數 ====
-        # super(Actor, self).__init__()
-        # self.num_groups = num_groups
-        # self.num_phases = num_phases
-        # self.fc1 = nn.Linear(state_dim, neuron)
-        # self.fc2 = nn.Linear(neuron, neuron)
-        # self.fc3 = nn.Linear(neuron, neuron)
-        # self.fc4 = nn.Linear(neuron, num_groups * num_phases)
-        # self.softmax = nn.Softmax(dim=-1)
+        # ==== 組合 2：多層、同神經元數 ====
+        super(Actor, self).__init__()
+        self.num_groups = num_groups
+        self.num_phases = num_phases
+        self.fc1 = nn.Linear(state_dim, neuron)
+        self.fc2 = nn.Linear(neuron, neuron)
+        self.fc3 = nn.Linear(neuron, neuron)
+        self.fc4 = nn.Linear(neuron, num_groups * num_phases)
+        self.softmax = nn.Softmax(dim=-1)
 
         # # ==== 組合 3：多層、不同神經元數 ====
         # super(Actor, self).__init__()
@@ -115,15 +115,15 @@ class Actor(nn.Module):
         # self.out = nn.Linear(neuron, num_groups * num_phases)
         # self.softmax = nn.Softmax(dim=-1)
 
-        # ==== 組合 6：Actor 使用瓶頸式壓縮，Critic 使用動作與狀態共享後再拆分 ====
-        super(Actor, self).__init__()
-        self.num_groups = num_groups
-        self.num_phases = num_phases
-        self.fc1 = nn.Linear(state_dim, neuron)
-        self.fc2 = nn.Linear(neuron, neuron // 2)
-        self.fc3 = nn.Linear(neuron // 2, neuron // 8)
-        self.fc4 = nn.Linear(neuron // 8, num_groups * num_phases)
-        self.softmax = nn.Softmax(dim=-1)
+        # # ==== 組合 6：Actor 使用瓶頸式壓縮，Critic 使用動作與狀態共享後再拆分 ====
+        # super(Actor, self).__init__()
+        # self.num_groups = num_groups
+        # self.num_phases = num_phases
+        # self.fc1 = nn.Linear(state_dim, neuron)
+        # self.fc2 = nn.Linear(neuron, neuron // 2)
+        # self.fc3 = nn.Linear(neuron // 2, neuron // 8)
+        # self.fc4 = nn.Linear(neuron // 8, num_groups * num_phases)
+        # self.softmax = nn.Softmax(dim=-1)
 
         # #==== Multi USER (K>1) - 多層同神經元 ====
         # super(Actor, self).__init__()
@@ -189,13 +189,13 @@ class Actor(nn.Module):
         # x = x.view(-1, self.num_groups, self.num_phases)
         # return self.softmax(x)
     
-        # # ==== 組合 2：多層、同神經元數 ====
-        # x = torch.relu(self.fc1(state))
-        # x = torch.relu(self.fc2(x))
-        # x = torch.relu(self.fc3(x))
-        # x = self.fc4(x)
-        # x = x.view(-1, self.num_groups, self.num_phases)
-        # return self.softmax(x)
+        # ==== 組合 2：多層、同神經元數 ====
+        x = torch.relu(self.fc1(state))
+        x = torch.relu(self.fc2(x))
+        x = torch.relu(self.fc3(x))
+        x = self.fc4(x)
+        x = x.view(-1, self.num_groups, self.num_phases)
+        return self.softmax(x)
 
         # # ==== 組合 3：多層、不同神經元數 ====
         # x = torch.relu(self.fc1(state))
@@ -222,13 +222,13 @@ class Actor(nn.Module):
         # x = x.view(-1, self.num_groups, self.num_phases)
         # return self.softmax(x)
 
-        # ==== 組合 6：Actor 使用瓶頸式壓縮，Critic 使用動作與狀態共享後再拆分 ====
-        x = torch.relu(self.fc1(state))
-        x = torch.relu(self.fc2(x))
-        x = torch.relu(self.fc3(x))
-        x = self.fc4(x)
-        x = x.view(-1, self.num_groups, self.num_phases)
-        return self.softmax(x)
+        # # ==== 組合 6：Actor 使用瓶頸式壓縮，Critic 使用動作與狀態共享後再拆分 ====
+        # x = torch.relu(self.fc1(state))
+        # x = torch.relu(self.fc2(x))
+        # x = torch.relu(self.fc3(x))
+        # x = self.fc4(x)
+        # x = x.view(-1, self.num_groups, self.num_phases)
+        # return self.softmax(x)
 
         # # ==== Multi USER (K>1) - 多層不同神經元 與 多層同神經元 ====
         # x = torch.relu(self.ln1(self.fc1(state)))
@@ -294,16 +294,16 @@ class Critic(nn.Module):
         # self.fc3 = nn.Linear(neuron * 2, neuron)
         # self.fc4 = nn.Linear(neuron, 1)
 
-        # # ==== 組合 2：多層、同神經元數 ====
-        # super(Critic, self).__init__()
-        # self.action_embedding = nn.Embedding(num_phases, 16)
-        # self.fc1 = nn.Linear(state_dim, neuron)
-        # self.fc2 = nn.Linear(neuron, neuron)
-        # self.fc3 = nn.Linear(neuron, neuron)
-        # self.fc_action1 = nn.Linear(num_groups * 16, neuron)
-        # self.fc_action2 = nn.Linear(neuron, neuron)
-        # self.fc_merge = nn.Linear(neuron * 2, neuron)
-        # self.fc_out = nn.Linear(neuron, 1)
+        # ==== 組合 2：多層、同神經元數 ====
+        super(Critic, self).__init__()
+        self.action_embedding = nn.Embedding(num_phases, 16)
+        self.fc1 = nn.Linear(state_dim, neuron)
+        self.fc2 = nn.Linear(neuron, neuron)
+        self.fc3 = nn.Linear(neuron, neuron)
+        self.fc_action1 = nn.Linear(num_groups * 16, neuron)
+        self.fc_action2 = nn.Linear(neuron, neuron)
+        self.fc_merge = nn.Linear(neuron * 2, neuron)
+        self.fc_out = nn.Linear(neuron, 1)
 
         # # ==== 組合 3：多層、不同神經元數 ====
         # super(Critic, self).__init__()
@@ -337,13 +337,13 @@ class Critic(nn.Module):
         # self.fc_merge = nn.Linear(2 * neuron, neuron)
         # self.out = nn.Linear(neuron, 1)
 
-        # ==== 組合 6：Actor 使用瓶頸式壓縮，Critic 使用動作與狀態共享後再拆分 ====
-        super(Critic, self).__init__()
-        self.action_embedding = nn.Embedding(num_phases, 16)
-        self.shared = nn.Linear(state_dim + num_groups * 16, neuron)
-        self.fc1 = nn.Linear(neuron, neuron // 2)
-        self.fc2 = nn.Linear(neuron // 2, neuron // 4)
-        self.out = nn.Linear(neuron // 4, 1)
+        # # ==== 組合 6：Actor 使用瓶頸式壓縮，Critic 使用動作與狀態共享後再拆分 ====
+        # super(Critic, self).__init__()
+        # self.action_embedding = nn.Embedding(num_phases, 16)
+        # self.shared = nn.Linear(state_dim + num_groups * 16, neuron)
+        # self.fc1 = nn.Linear(neuron, neuron // 2)
+        # self.fc2 = nn.Linear(neuron // 2, neuron // 4)
+        # self.out = nn.Linear(neuron // 4, 1)
 
         # # ==== Multi USER (K>1) - 多層同神經元 ====
         # super(Critic, self).__init__()
@@ -440,17 +440,17 @@ class Critic(nn.Module):
         # x = torch.relu(self.fc3(x))
         # return self.fc4(x)
 
-        # # ==== 組合 2：多層、同神經元數 ====
-        # x_s = torch.relu(self.fc1(state))
-        # x_s = torch.relu(self.fc2(x_s))
-        # x_s = torch.relu(self.fc3(x_s))
-        # embed_weights = self.action_embedding.weight
-        # x_a = torch.matmul(soft_action, embed_weights).view(soft_action.shape[0], -1)
-        # x_a = torch.relu(self.fc_action1(x_a))
-        # x_a = torch.relu(self.fc_action2(x_a))
-        # x = torch.cat([x_s, x_a], dim=-1)
-        # x = torch.relu(self.fc_merge(x))
-        # return self.fc_out(x)
+        # ==== 組合 2：多層、同神經元數 ====
+        x_s = torch.relu(self.fc1(state))
+        x_s = torch.relu(self.fc2(x_s))
+        x_s = torch.relu(self.fc3(x_s))
+        embed_weights = self.action_embedding.weight
+        x_a = torch.matmul(soft_action, embed_weights).view(soft_action.shape[0], -1)
+        x_a = torch.relu(self.fc_action1(x_a))
+        x_a = torch.relu(self.fc_action2(x_a))
+        x = torch.cat([x_s, x_a], dim=-1)
+        x = torch.relu(self.fc_merge(x))
+        return self.fc_out(x)
 
         # # ==== 組合 3：多層、不同神經元數 ====
         # x_s = torch.relu(self.fc1(state))
@@ -487,14 +487,14 @@ class Critic(nn.Module):
         # x = torch.relu(self.fc_merge(x))
         # return self.out(x)
 
-        # ==== 組合 6：Actor 使用瓶頸式壓縮，Critic 使用動作與狀態共享後再拆分 ====
-        embed_weights = self.action_embedding.weight
-        soft_embed = torch.matmul(soft_action, embed_weights).view(soft_action.shape[0], -1)
-        x = torch.cat([state, soft_embed], dim=-1)
-        x = torch.relu(self.shared(x))
-        x = torch.relu(self.fc1(x))
-        x = torch.relu(self.fc2(x))
-        return self.out(x)
+        # # ==== 組合 6：Actor 使用瓶頸式壓縮，Critic 使用動作與狀態共享後再拆分 ====
+        # embed_weights = self.action_embedding.weight
+        # soft_embed = torch.matmul(soft_action, embed_weights).view(soft_action.shape[0], -1)
+        # x = torch.cat([state, soft_embed], dim=-1)
+        # x = torch.relu(self.shared(x))
+        # x = torch.relu(self.fc1(x))
+        # x = torch.relu(self.fc2(x))
+        # return self.out(x)
 
         # # ==== Multi USER (K>1) - 多層不同神經元 與 多層同神經元====
         # x_s = torch.relu(self.ln1(self.fc1(state)))
@@ -559,16 +559,16 @@ class Critic(nn.Module):
         # x = torch.relu(self.fc3(x))
         # return self.fc4(x)
     
-        # # ==== 組合 2：多層、同神經元數 ====
-        # x_s = torch.relu(self.fc1(state))
-        # x_s = torch.relu(self.fc2(x_s))
-        # x_s = torch.relu(self.fc3(x_s))
-        # x_a = self.action_embedding(action).view(action.shape[0], -1)
-        # x_a = torch.relu(self.fc_action1(x_a))
-        # x_a = torch.relu(self.fc_action2(x_a))
-        # x = torch.cat([x_s, x_a], dim=-1)
-        # x = torch.relu(self.fc_merge(x))
-        # return self.fc_out(x)
+        # ==== 組合 2：多層、同神經元數 ====
+        x_s = torch.relu(self.fc1(state))
+        x_s = torch.relu(self.fc2(x_s))
+        x_s = torch.relu(self.fc3(x_s))
+        x_a = self.action_embedding(action).view(action.shape[0], -1)
+        x_a = torch.relu(self.fc_action1(x_a))
+        x_a = torch.relu(self.fc_action2(x_a))
+        x = torch.cat([x_s, x_a], dim=-1)
+        x = torch.relu(self.fc_merge(x))
+        return self.fc_out(x)
     
         # # ==== 組合 3：多層、不同神經元數 ====
         # x_s = torch.relu(self.fc1(state))
@@ -601,13 +601,13 @@ class Critic(nn.Module):
         # x = torch.relu(self.fc_merge(x))
         # return self.out(x)
 
-        # ==== 組合 6：Actor 使用瓶頸式壓縮，Critic 使用動作與狀態共享後再拆分 ====
-        x_a = self.action_embedding(action).view(action.shape[0], -1)
-        x = torch.cat([state, x_a], dim=-1)
-        x = torch.relu(self.shared(x))
-        x = torch.relu(self.fc1(x))
-        x = torch.relu(self.fc2(x))
-        return self.out(x)
+        # # ==== 組合 6：Actor 使用瓶頸式壓縮，Critic 使用動作與狀態共享後再拆分 ====
+        # x_a = self.action_embedding(action).view(action.shape[0], -1)
+        # x = torch.cat([state, x_a], dim=-1)
+        # x = torch.relu(self.shared(x))
+        # x = torch.relu(self.fc1(x))
+        # x = torch.relu(self.fc2(x))
+        # return self.out(x)
 
         # # ==== Multi USER (K>1) - 多層同神經元 ====
         # x_s = torch.relu(self.ln1(self.fc1(state)))

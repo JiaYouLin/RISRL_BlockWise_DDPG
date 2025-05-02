@@ -678,7 +678,7 @@ def scenario_configs(scenario: str):
 
         # MUs
         centers = [(2.5 * scale, 7.5 * scale)]
-        std = 1 * scale
+        std = 5 * scale
         K = 4
     elif scenario == "debug_no_obs":
         scale = 5
