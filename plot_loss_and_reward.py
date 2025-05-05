@@ -129,7 +129,48 @@ def plot_all_timeslots_step(filtered_data, metric, ylabel, title, filename, save
     plt.savefig(os.path.join(save_path, filename))
     plt.show()
 
-def plot_individual_timeslots_step(df, metric, ylabel, title_prefix, filename_prefix, save_path, min_timeslot, max_timeslot, dynamic_type):
+def plot_individual_timeslots_step(df, ylabel, title_prefix, filename_prefix, save_path, min_timeslot, max_timeslot, dynamic_type):
+    init_display_settings()
+
+    for idx, timeslot in enumerate(range(min_timeslot, max_timeslot + 1)):
+        filtered_df_indep = df[df['Episode(timeslot)'] == timeslot]
+        if not filtered_df_indep.empty:
+            plt.figure(figsize=(10, 6), dpi=300)
+            color_c = 'r'
+            color_a = 'b'
+            linestyle_c = '-'
+            linestyle_a = '--'
+
+            # 畫 critic_loss
+            plt.plot(
+                filtered_df_indep['step'], filtered_df_indep['critic_loss'],
+                label='Critic Loss',
+                color=color_c, linestyle=linestyle_c, linewidth=1.5, alpha=0.7
+            )
+
+            # 畫 actor_loss
+            plt.plot(
+                filtered_df_indep['step'], filtered_df_indep['actor_loss'],
+                label='Actor Loss',
+                color=color_a, linestyle=linestyle_a, linewidth=1.5, alpha=0.7
+            )
+
+            plt.xlabel('Step')
+            plt.ylabel(ylabel)
+            plt.title(f'{title_prefix} for timeslot {timeslot}')
+            plt.legend(loc='best')
+
+            ax = plt.gca()
+            ax.yaxis.set_major_formatter(ScalarFormatter(useOffset=False))
+            ax.ticklabel_format(style='plain', axis='y')
+            ax.xaxis.set_major_formatter(ScalarFormatter())
+            ax.ticklabel_format(style='plain', axis='x')
+
+            plt.tight_layout()
+            plt.savefig(os.path.join(save_path, f'{filename_prefix}_{dynamic_type}_timeslot_{timeslot}.png'))
+            plt.close()
+
+def plot_individual_timeslots_step_reward(df, metric, ylabel, title_prefix, filename_prefix, save_path, min_timeslot, max_timeslot, dynamic_type):
     
     init_display_settings()
 
@@ -298,7 +339,7 @@ def main():
     init_display_settings()
 
     # 動態部分, 時間戳與類型
-    dynamic_time = '20250417_171559_seed_128'
+    dynamic_time = '20250503_044007_seed_128'
     dynamic_type = 'training'  # training or testing
 
     # 動態生成 CSV 文件路徑
@@ -334,9 +375,9 @@ def main():
         # # plot_all_timeslots_step(filtered_df, 'Q_value', 'Q-value', f'Q-value over Steps for timeslot {min_timeslot} to {max_timeslot}', f'Q-value_{dynamic_type}.png', save_path, min_timeslot, max_timeslot)
 
         # # 儲存每個 timeslot 的獨立 Loss, Reward 和 Q-value 圖形
-        # plot_individual_timeslots_step(df, 'loss', 'Loss', 'Loss over Steps', 'loss', save_path, min_timeslot, max_timeslot, dynamic_type)
-        # plot_individual_timeslots_step(df, 'reward', 'Reward', 'Reward over Steps', 'reward', save_path, min_timeslot, max_timeslot, dynamic_type)
-        # # plot_individual_timeslots_step(df, 'Q_value', 'Q-value', 'Q-value over Steps', 'Q_value', save_path, min_timeslot, max_timeslot, dynamic_type)
+        plot_individual_timeslots_step(df, 'Loss', 'Loss over Steps', 'loss', save_path, min_timeslot, max_timeslot, dynamic_type)
+        plot_individual_timeslots_step_reward(df, 'reward', 'Reward', 'Reward over Steps', 'reward', save_path, min_timeslot, max_timeslot, dynamic_type)
+        # plot_individual_timeslots_step(df, 'Q_value', 'Q-value', 'Q-value over Steps', 'Q_value', save_path, min_timeslot, max_timeslot, dynamic_type)
 
         # 忽略 time slots, 繪製所有 step 的 Loss, Reward 和 Q-value
         plot_loss_merge_timeslots_step(df, 'loss', 'Loss', 'Training Loss across Steps', f'loss_{dynamic_type}_AcrossSteps.png', save_path)

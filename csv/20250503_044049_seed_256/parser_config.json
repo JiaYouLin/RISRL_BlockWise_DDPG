@@ -1,0 +1,99 @@
+{
+    "cpu_core": null,
+    "seed": 256,
+    "device": "cuda",
+    "use_cuda": true,
+    "init_phase_method": "random",
+    "fixed_ue": true,
+    "neuron": 256,
+    "max_episodes": 1000,
+    "episode_length": 800,
+    "batch_size": 512,
+    "lr_actor": 0.0005,
+    "lr_critic": 0.0005,
+    "gamma": 0.8,
+    "tau": 0.01,
+    "policy_delay": 20,
+    "exploration_rate": 1.0,
+    "exploration_decay": 0.995,
+    "exploration_min": 0.1,
+    "ema_beta": 0.8,
+    "gumbel_tau": 1.0,
+    "buffer_size": 10000000,
+    "bits": 1,
+    "group_size": [
+        8,
+        8
+    ],
+    "log_dir": "20250503_044047",
+    "save_data": true,
+    "save_model": true,
+    "load_model": false,
+    "load_model_name": "20241002_113848_model.pth",
+    "wavelength": 0.116,
+    "scenario": "debug_with_obs_32_32_ue4",
+    "scale": 5,
+    "area": [
+        50,
+        100
+    ],
+    "BS_pos": [
+        12.5,
+        -37.5,
+        3
+    ],
+    "ris_size": [
+        32,
+        32
+    ],
+    "ris_norm": [
+        1,
+        0,
+        0
+    ],
+    "ris_center": [
+        -25.0,
+        0,
+        2.628
+    ],
+    "ris_height": 1.7,
+    "centers": [
+        [
+            12.5,
+            37.5
+        ]
+    ],
+    "std": 25,
+    "K": 4,
+    "MU_mode": "poisson",
+    "obs3": {
+        "pos": [
+            12.5,
+            0.0,
+            0.0
+        ],
+        "size": [
+            15.0,
+            15.0,
+            9.0
+        ],
+        "height": null,
+        "rotate": 45
+    },
+    "obstacles": [
+        {
+            "pos": [
+                12.5,
+                0.0,
+                0.0
+            ],
+            "size": [
+                15.0,
+                15.0,
+                9.0
+            ],
+            "height": null,
+            "rotate": 45
+        }
+    ]
+}
