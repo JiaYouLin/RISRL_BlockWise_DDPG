@@ -56,7 +56,7 @@ def init_display_settings():
     pd.set_option('display.precision', 8)
     pd.set_option('display.float_format', lambda x: '%.8f' % x)
 
-seed_sweep_folder_name = None  # 儲存 main() 中產生的 folder_name
+# seed_sweep_folder_name = None  # 儲存 main() 中產生的 folder_name
 
 # def generate_all_combinations(a_dim, num_elements, total_combinations):
 #     """
@@ -964,43 +964,45 @@ def channel_beam(channel, beamformer, scenario, folder_name, num_elements, h_ris
     channel.show(dir)
     channel.plot_SINR(dir, SINR[0])  # rarely used
 
-def run_seed_sweep_and_analyze(seed_list, args):
+def run_seed_sweep_and_analyze(args):
     """
     執行多個隨機種子(seed)的訓練流程, 並彙總各自的結果
 
     Args:
         seed_list (list): 要執行的 seed 數值列表。
         args (argparse.Namespace): 命令列參數，會根據每個 seed 建立獨立執行參數。
+        seed_sweep_folder_name (str): 多 seed 結果的主資料夾名稱。
     """
 
     # 使用 main.py 裡預先設定的全域變數作為基礎資料夾名稱
-    from main import seed_sweep_folder_name  # 匯入 main.py 全域變數
+    # from main import seed_sweep_folder_name  # 匯入 main.py 全域變數
+
+    folder_base = f"./csv/seed_sweep/{time.strftime('%Y%m%d_%H%M%S', time.localtime())}"
+    seed_range = range(args.multi_seed_min, args.multi_seed_max)
+    seed_list = random.sample(seed_range, min(args.multi_seed_count, len(seed_range)))
 
     summary_records = []
 
     for seed in seed_list:
         args_this = copy.deepcopy(args)
         args_this.seed_rl = seed
-        
-        # 使用全域名稱 + 當前 seed 組成資料夾
-        args_this.folder_name = f"{seed_sweep_folder_name}_seed_{seed}"
+        folder_name = f"{folder_base}_seed_{seed}"
 
-        os.makedirs(args_this.folder_name, exist_ok=True)
+        os.makedirs(folder_name, exist_ok=True)
         with open('./csv/train_folder_name.txt', 'w') as f:
-            f.write(args_this.folder_name)
+            f.write(folder_name)
 
-        print(f"\n====== [RUNNING SEED {seed}] Saving to: {args_this.folder_name} ======\n")
+        print(f"\n====== [RUNNING SEED {seed}] Saving to: {folder_name} ======\n")
 
         # 執行主訓練流程（不需重新命名資料夾）
-        main(args_this)
+        main(args_this, folder_name)
 
         # === 讀取 RL_testing_after.csv 取平均 datarate ===
-        after_csv = os.path.join(args_this.folder_name, "RL_testing_after.csv")
+        after_csv = os.path.join(folder_name, "RL_testing_after.csv")
+        avg_datarate = None
         if os.path.exists(after_csv):
             df = pd.read_csv(after_csv)
             avg_datarate = df["Average Datarate"].mean()
-        else:
-            avg_datarate = None
 
         summary_records.append({
             "Seed": seed,
@@ -1010,11 +1012,11 @@ def run_seed_sweep_and_analyze(seed_list, args):
 
     # 儲存彙總結果
     summary_df = pd.DataFrame(summary_records)
-    summary_path = os.path.join(seed_sweep_folder_name + "_summary_across_seeds.csv")
+    summary_path = folder_base + "_summary_across_seeds.csv"
     summary_df.to_csv(summary_path, index=False)
     print(f"Summary across seeds saved to {summary_path}")
 
-def main(args):
+def main(args, folder_name=None):
 
     init_display_settings()
 
@@ -1102,15 +1104,10 @@ def main(args):
     state_dim = num_elements + K                                            # 32*32個element(1024) + 50個UE的SINR
     action_dim = num_groups * num_phases  # Action 由 (選擇群組, 選擇 Phase) 共同決定
 
-    global seed_sweep_folder_name
-
-    if args.multi_seed_run:
-        folder_name = f"{seed_sweep_folder_name}_seed_{args.seed_rl}"
-    else:
-        folder_name = './csv/seed_sweep/' + time.strftime("%Y%m%d_%H%M%S", time.localtime()) + '_seed_' + str(args.seed_rl)
-    
-    # 儲存給 run_seed_sweep_and_analyze 用
-    seed_sweep_folder_name = folder_name
+    if folder_name is None:
+        # 單一 seed 模式才需要建立 folder_name
+        folder_name = './csv/' + time.strftime("%Y%m%d_%H%M%S", time.localtime()) + '_seed_' + str(args.seed_rl)
+    print(f'[main] Using folder_name: {folder_name}')
 
     with open('./csv/train_folder_name.txt', 'w') as f:
         f.write(folder_name)
@@ -1621,7 +1618,7 @@ if __name__ == '__main__':
         parser.add_argument('--use_cuda', default=True, type=bool)
 
         parser.add_argument('--init_phase_method', default='random', choices=['random', 'constructive'], help='Choose initial RIS phase method: random or constructive.')
-        parser.add_argument('--fixed_ue', default=False, action='store_true', help='Use fixed UE positions')
+        parser.add_argument('--fixed_ue', default=True, action='store_true', help='Use fixed UE positions')
         parser.add_argument('--neuron', default=256, type=int, help='Number of neurons in each layer')
         parser.add_argument('--max_episodes', default=1000, type=int)           # 800 timeslot, default:501, train 0.7 testint 0.3
         parser.add_argument('--episode_length', default=800, type=int)         # 400, temp_step
@@ -1702,15 +1699,7 @@ if __name__ == '__main__':
             os.sched_setaffinity(0, {args.cpu_core})  # 綁定到指定 CPU 核心
 
         if args.multi_seed_run:
-            def prepare_seed_sweep_and_run():
-                # 改成隨機選 50 組 seed
-                global seed_sweep_folder_name
-                seed_sweep_folder_name = f"./csv/{time.strftime('%Y%m%d_%H%M%S', time.localtime())}"
-                seed_range = range(args.multi_seed_min, args.multi_seed_max)
-                seed_list = random.sample(seed_range, min(args.multi_seed_count, len(seed_range)))
-                run_seed_sweep_and_analyze(seed_list, args)
-            
-            prepare_seed_sweep_and_run()
+            run_seed_sweep_and_analyze(args)
         else:
             # 跑原本的單一 seed 訓練流程
             main(args)
