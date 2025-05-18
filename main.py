@@ -22,6 +22,10 @@ import numpy as np
 import pandas as pd
 import torch
 
+import glob
+import shutil
+import copy
+
 from agent import DDPGAgent
 from RISdata import Phase_state, create_group_mapping
 from env import RISEnv
@@ -51,6 +55,8 @@ def init_display_settings():
     torch.set_printoptions(precision=8)
     pd.set_option('display.precision', 8)
     pd.set_option('display.float_format', lambda x: '%.8f' % x)
+
+seed_sweep_folder_name = None  # 儲存 main() 中產生的 folder_name
 
 # def generate_all_combinations(a_dim, num_elements, total_combinations):
 #     """
@@ -958,6 +964,56 @@ def channel_beam(channel, beamformer, scenario, folder_name, num_elements, h_ris
     channel.show(dir)
     channel.plot_SINR(dir, SINR[0])  # rarely used
 
+def run_seed_sweep_and_analyze(seed_list, args):
+    """
+    執行多個隨機種子(seed)的訓練流程, 並彙總各自的結果
+
+    Args:
+        seed_list (list): 要執行的 seed 數值列表。
+        args (argparse.Namespace): 命令列參數，會根據每個 seed 建立獨立執行參數。
+    """
+
+    # 使用 main.py 裡預先設定的全域變數作為基礎資料夾名稱
+    from main import seed_sweep_folder_name  # 匯入 main.py 全域變數
+
+    summary_records = []
+
+    for seed in seed_list:
+        args_this = copy.deepcopy(args)
+        args_this.seed_rl = seed
+        
+        # 使用全域名稱 + 當前 seed 組成資料夾
+        args_this.folder_name = f"{seed_sweep_folder_name}_seed_{seed}"
+
+        os.makedirs(args_this.folder_name, exist_ok=True)
+        with open('./csv/train_folder_name.txt', 'w') as f:
+            f.write(args_this.folder_name)
+
+        print(f"\n====== [RUNNING SEED {seed}] Saving to: {args_this.folder_name} ======\n")
+
+        # 執行主訓練流程（不需重新命名資料夾）
+        main(args_this)
+
+        # === 讀取 RL_testing_after.csv 取平均 datarate ===
+        after_csv = os.path.join(args_this.folder_name, "RL_testing_after.csv")
+        if os.path.exists(after_csv):
+            df = pd.read_csv(after_csv)
+            avg_datarate = df["Average Datarate"].mean()
+        else:
+            avg_datarate = None
+
+        summary_records.append({
+            "Seed": seed,
+            "Folder": args_this.folder_name,
+            "Avg_Datarate": avg_datarate
+        })
+
+    # 儲存彙總結果
+    summary_df = pd.DataFrame(summary_records)
+    summary_path = os.path.join(seed_sweep_folder_name + "_summary_across_seeds.csv")
+    summary_df.to_csv(summary_path, index=False)
+    print(f"Summary across seeds saved to {summary_path}")
+
 def main(args):
 
     init_display_settings()
@@ -1000,10 +1056,14 @@ def main(args):
     print(f"fc: {3e8 / wavelength * 1e-9:.4f} GHz")
     print(f'Device: {args.device}')
     print(f'Scenario: {scenario}')
-    print(f"Seed: {args.seed}")
+    print(f"Seed_rl: {args.seed_rl}")
     # 如果 args.seed 是 None, 則隨機產生一個 seed
-    if args.seed is None:
-        args.seed = random.randint(0, 2025)  # 產生 0 到 2025 之間的隨機整數
+    if args.seed_rl is None:
+        args.seed_rl = random.randint(0, 10000)  # 產生 0 到 2025 之間的隨機整數
+    torch.manual_seed(args.seed_rl)
+    np.random.seed(args.seed_rl)
+    random.seed(args.seed_rl)
+    print(f"==> RL Seed: {args.seed_rl}, Channel Seed: {args.seed_channel}")
 
     num_phases, phases_discrete = get_phase_config(args)
     print(f"agent.py/init_agent || num_phases: {num_phases}")
@@ -1026,7 +1086,7 @@ def main(args):
         K = K,
         device = args.device,
         MU_dist = MU_mode,
-        rand_seed = args.seed,
+        rand_seed = args.seed_channel,
         args = args,
     )
     beamformer = Beamformer(device = args.device)
@@ -1042,7 +1102,16 @@ def main(args):
     state_dim = num_elements + K                                            # 32*32個element(1024) + 50個UE的SINR
     action_dim = num_groups * num_phases  # Action 由 (選擇群組, 選擇 Phase) 共同決定
 
-    folder_name = './csv/' + time.strftime("%Y%m%d_%H%M%S", time.localtime()) + '_seed_' + str(args.seed)
+    global seed_sweep_folder_name
+
+    if args.multi_seed_run:
+        folder_name = f"{seed_sweep_folder_name}_seed_{args.seed_rl}"
+    else:
+        folder_name = './csv/seed_sweep/' + time.strftime("%Y%m%d_%H%M%S", time.localtime()) + '_seed_' + str(args.seed_rl)
+    
+    # 儲存給 run_seed_sweep_and_analyze 用
+    seed_sweep_folder_name = folder_name
+
     with open('./csv/train_folder_name.txt', 'w') as f:
         f.write(folder_name)
     if args.save_data:
@@ -1541,7 +1610,13 @@ if __name__ == '__main__':
     try:
         parser = argparse.ArgumentParser()                                      # 使用 argparse 定義和解析命令行參數
         parser.add_argument('--cpu_core', default=None, type=int, help='Specify the CPU core to use')
-        parser.add_argument('--seed', default=None, type=int)                    # random seed, 128, None
+        parser.add_argument('--multi_seed_run', default=True, action='store_true', help='Enable multiple random seeds run for averaging results')
+        parser.add_argument('--multi_seed_min', default=0, type=int, help='Minimum value for random seed range')
+        parser.add_argument('--multi_seed_max', default=10000, type=int, help='Maximum value for random seed range')
+        parser.add_argument('--multi_seed_count', default=50, type=int, help='Number of random seeds to sample and run')
+        
+        parser.add_argument('--seed_rl', default=None, type=int, help='Seed for RL model and training') # 沒有開啟 multi_seed_run 時, 這行會設定 random seed, 若為 None, 程式會自動 random.randint(0, 10000)
+        parser.add_argument('--seed_channel', default=128, type=int, help='Seed for channel and environment')    
         parser.add_argument('--device', choices=['cuda', 'cpu'], default='cuda' if torch.cuda.is_available() else 'cpu', type=str)
         parser.add_argument('--use_cuda', default=True, type=bool)
 
@@ -1626,7 +1701,19 @@ if __name__ == '__main__':
         if args.cpu_core is not None:
             os.sched_setaffinity(0, {args.cpu_core})  # 綁定到指定 CPU 核心
 
-        main(args)
+        if args.multi_seed_run:
+            def prepare_seed_sweep_and_run():
+                # 改成隨機選 50 組 seed
+                global seed_sweep_folder_name
+                seed_sweep_folder_name = f"./csv/{time.strftime('%Y%m%d_%H%M%S', time.localtime())}"
+                seed_range = range(args.multi_seed_min, args.multi_seed_max)
+                seed_list = random.sample(seed_range, min(args.multi_seed_count, len(seed_range)))
+                run_seed_sweep_and_analyze(seed_list, args)
+            
+            prepare_seed_sweep_and_run()
+        else:
+            # 跑原本的單一 seed 訓練流程
+            main(args)
 
     finally:
         # Clear the cache and perform garbage collection
