@@ -1006,7 +1006,7 @@ def run_seed_sweep_and_analyze(args):
 
         summary_records.append({
             "Seed": seed,
-            "Folder": args_this.folder_name,
+            "Folder": folder_name,
             "Avg_Datarate": avg_datarate
         })
 
@@ -1610,7 +1610,7 @@ if __name__ == '__main__':
         parser.add_argument('--multi_seed_run', default=True, action='store_true', help='Enable multiple random seeds run for averaging results')
         parser.add_argument('--multi_seed_min', default=0, type=int, help='Minimum value for random seed range')
         parser.add_argument('--multi_seed_max', default=10000, type=int, help='Maximum value for random seed range')
-        parser.add_argument('--multi_seed_count', default=50, type=int, help='Number of random seeds to sample and run')
+        parser.add_argument('--multi_seed_count', default=20, type=int, help='Number of random seeds to sample and run')
         
         parser.add_argument('--seed_rl', default=None, type=int, help='Seed for RL model and training') # 沒有開啟 multi_seed_run 時, 這行會設定 random seed, 若為 None, 程式會自動 random.randint(0, 10000)
         parser.add_argument('--seed_channel', default=128, type=int, help='Seed for channel and environment')    
