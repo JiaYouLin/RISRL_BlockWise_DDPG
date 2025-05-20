@@ -69,9 +69,9 @@ def create_group_mapping(ris_size, group_size):
 
     return num_groups, group_mapping
 
-def Phase_state(episode, channel, beamformer, folder_name, num_elements, group_mapping, args): 
+def Phase_state(episode, channel, beamformer, folder_name, num_elements, group_mapping, args, record_timeslot): 
 
-    global record_timeslot, drawn_scenario
+    global drawn_scenario
 
     init_display_settings()
 

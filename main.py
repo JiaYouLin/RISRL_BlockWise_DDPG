@@ -1117,9 +1117,10 @@ def main(args, folder_name=None):
     print("======================================== Start Training =========================================")
 
     episode = 1                                                             # 初始化 episode(=timeslot), 尚桓設2
+    record_timeslot = 0
 
     print(f"=========================== Initial phase state ============================")
-    initial_phase_state, initial_sinr_linear, initial_sinr_db, datarate = Phase_state(episode, channel, beamformer, folder_name, num_elements, group_mapping, args)  # 修改 Phase_state 以接受 channel
+    initial_phase_state, initial_sinr_linear, initial_sinr_db, datarate = Phase_state(episode, channel, beamformer, folder_name, num_elements, group_mapping, args, record_timeslot)  # 修改 Phase_state 以接受 channel
     # print(f"main.py || initial_phase_state[:] for timeslot {episode}: {initial_phase_state[:]}")
     # print(f"main.py || initial_sinr_linear[:] for timeslot {episode}: {initial_sinr_linear[:]}")
     # print(f"main.py || initial_sinr_db[:] for timeslot {episode}: {initial_sinr_db[:]}")
@@ -1144,7 +1145,7 @@ def main(args, folder_name=None):
             # print(f"agent: {agent}")
             # print(f"num_elements: {num_elements}")
 
-            state_before, sinr_before_linear, sinr_before_db, datarate_before = env.reset(episode, agent, num_elements, channel, beamformer, group_mapping, folder_name, args)
+            state_before, sinr_before_linear, sinr_before_db, datarate_before = env.reset(episode, agent, num_elements, channel, beamformer, group_mapping, folder_name, args, record_timeslot)
             # print(f"main.py/Training || state_before: {state_before}, type: {type(state_before)}")    
             # print(f'main.py/Training || sinr_before_linear: {sinr_before_linear}, type: {type(sinr_before_linear)}')
             # print(f'main.py/Training || sinr_before_db: {sinr_before_db}, type: {type(sinr_before_db)}')
@@ -1312,7 +1313,7 @@ def main(args, folder_name=None):
 
         for agent in range(1):        # agent, 因為我一次是調整整片RIS面板, 在Phase_state中已經會計算四個element phase, 因此這裡不需要再重複計算
 
-            state_before, sinr_before_linear, sinr_before_db, datarate_before = env.reset(test_episode, agent, num_elements, channel, beamformer, group_mapping, folder_name, args)
+            state_before, sinr_before_linear, sinr_before_db, datarate_before = env.reset(test_episode, agent, num_elements, channel, beamformer, group_mapping, folder_name, args, record_timeslot)
             # print(f"main.py/Testing || Test_state: {state_before}") 
             # print(f"main.py/Testing || Test_sinr_before_linear: {sinr_before_linear}, shape: {sinr_before_linear.shape}")
             print(f"main.py/Testing || SINR (dB) BEFORE adjustment:: {sinr_before_db}\n")
@@ -1406,31 +1407,31 @@ def main(args, folder_name=None):
         # update_ue_env = channel.update_environment()
         # print(f"Update UE position: {update_ue_env}")
 
-    # DEBUG: BEAM
-    channel_beam(
-        channel=channel,
-        beamformer=beamformer,
-        scenario=scenario,
-        folder_name=folder_name,
-        num_elements=num_elements,
-        h_ris=ris_size[0],
-        w_ris=ris_size[1],
-        args=args,
-        d_ris_elem=d_ris_elem
-    )
+    # # DEBUG: BEAM
+    # channel_beam(
+    #     channel=channel,
+    #     beamformer=beamformer,
+    #     scenario=scenario,
+    #     folder_name=folder_name,
+    #     num_elements=num_elements,
+    #     h_ris=ris_size[0],
+    #     w_ris=ris_size[1],
+    #     args=args,
+    #     d_ris_elem=d_ris_elem
+    # )
 
-    # 將RIS元素分成G個群組, 每組共享相同的phase, 遍歷所有組合, 計算每種組合的SINR和Datarate
-    block_wise_phase_grouping(
-        channel=channel,
-        beamformer=beamformer,
-        scenario=scenario,
-        folder_name=folder_name,
-        num_elements=num_elements,
-        K=K,
-        device=args.device,
-        count_tmp=count_tmp,
-        args=args
-    )
+    # # 將RIS元素分成G個群組, 每組共享相同的phase, 遍歷所有組合, 計算每種組合的SINR和Datarate
+    # block_wise_phase_grouping(
+    #     channel=channel,
+    #     beamformer=beamformer,
+    #     scenario=scenario,
+    #     folder_name=folder_name,
+    #     num_elements=num_elements,
+    #     K=K,
+    #     device=args.device,
+    #     count_tmp=count_tmp,
+    #     args=args
+    # )
 
     # # 基於已知高SINR phase增添擾動擴展探索, 取得鄰近高SINR phase組合, 隨後計算高SINR組合的數量
     # known_highSINR_phase_sampling(

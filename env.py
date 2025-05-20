@@ -51,13 +51,13 @@ class RISEnv:
         # print(f'env.py/__init__ || self.num_phases: {self.num_phases}')
         # print(f'env.py/__init__ || self.Phase_state: {self.Phase_state}')
 
-    def reset(self, episode, agent, num_elements, channel, beamformer, group_mapping, folder_name, args):                                        # 初始化環境狀態條件
+    def reset(self, episode, agent, num_elements, channel, beamformer, group_mapping, folder_name, args, record_timeslot):                                        # 初始化環境狀態條件
         init_display_settings()
 
         # DEBUG
         # print(f'env.py/reset || channel: {channel.get_channel_coefficient()}')
 
-        state_before, sinr_before_linear, sinr_before_db, datarate_before = Phase_state(episode, channel, beamformer, folder_name, num_elements, group_mapping, args)                             # 獲取這個timeslot的初始phase
+        state_before, sinr_before_linear, sinr_before_db, datarate_before = Phase_state(episode, channel, beamformer, folder_name, num_elements, group_mapping, args, record_timeslot)                             # 獲取這個timeslot的初始phase
         # print(f"env.py/reset || state_before: {state_before}")
         # print(f"env.py/reset || sinr_linear_random: {sinr_before_linear}")
         # print(f"env.py/reset || sinr_db_random: {sinr_before_db}")
