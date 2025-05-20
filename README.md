@@ -1,4 +1,4 @@
-# RISRL_RowWise_1x8_Block_DDPG
+# RISRL_BlockWise_DDPG
 
 Retrieve the code from this version of the RIS_RL repository (a8ece9a376e954ff917ab7b645b32aaf7c948493), link:
 https://github.com/JiaYouLin/RIS_RL/tree/a8ece9a376e954ff917ab7b645b32aaf7c948493. 
