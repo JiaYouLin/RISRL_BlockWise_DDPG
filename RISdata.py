@@ -85,33 +85,39 @@ def Phase_state(episode, channel, beamformer, folder_name, num_elements, group_m
 
     # 判斷要 trainnig model 還是 load model, 根據當前 timeslot 是否與前一個不同來決定是否更新通道
     print(f"Timeslot: {episode}\n")
-    if record_timeslot==0:  # initial
+    if record_timeslot['val'] == 0:  # initial
+        print(f"RISdata.py/Phase_state || Current record_timeslot: {record_timeslot['val']}")
         init_channel = channel.get_channel_coefficient()
         print(f"RISdata.py/Phase_state || Get \"None\" Channel Coefficient at Timeslot {episode}: {init_channel}[0][:1]")
         channel.update_channel(alpha_los=2, alpha_nlos=4, kapa=10, time_corrcoef=0)          # 這裡的更新channel就是更新3個channel (h_Bk, H_BS, h_Sk), 跟channel有關的東西都會在這裡算出來
         after_update_channel = channel.get_channel_coefficient()          # test: check channel changed
-        print(f"RISdata.py/Phase_state || Initial Channel Coefficient[0][:1] at Timeslot {record_timeslot}: {after_update_channel[0][:1]}...\n")
-        record_timeslot += 1
-    elif record_timeslot == episode:                                                 # initial
+        print(f"RISdata.py/Phase_state || Initial Channel Coefficient[0][:1] at Timeslot {record_timeslot['val']}: {after_update_channel[0][:1]}...")
+        record_timeslot['val'] += 1
+        print(f"RISdata.py/Phase_state || Update record_timeslot: {record_timeslot['val']}\n")
+    elif record_timeslot['val'] == episode:                                                 # initial
+        print(f"RISdata.py/Phase_state || Current record_timeslot: {record_timeslot['val']}")
         init_channel = channel.get_channel_coefficient()
         print(f"RISdata.py/Phase_state || Get Same Channel Coefficient at Timeslot {episode}: {init_channel[0][:1]}")
         # channel.update_channel(alpha_los=2, alpha_nlos=4, kapa=10, time_corrcoef=0)          # 這裡的更新channel就是更新3個channel (h_Bk, H_BS, h_Sk), 跟channel有關的東西都會在這裡算出來
         # after_update_channel = channel.get_channel_coefficient()          # test: check channel changed
         # print(f"RISdata.py/Phase_state || Initial Channel Coefficient[0][:1] at Timeslot {record_timeslot}: {after_update_channel[0][:1]}...\n")
-    elif record_timeslot < episode:  
-        print(f"Current timeslot: {episode}")
-        print(f"Current record_timeslot: {record_timeslot}")
-        record_timeslot = episode  # 更新前一個 timeslot 的值
-        print(f"Update record_timeslot: {record_timeslot}")
+    elif record_timeslot['val'] < episode:  
+        print(f"RISdata.py/Phase_state || Current timeslot: {episode}")
+        print(f"RISdata.py/Phase_state || Current record_timeslot: {record_timeslot['val']}")
+        record_timeslot['val'] = episode  # 更新前一個 timeslot 的值
+        print(f"RISdata.py/Phase_state || Update record_timeslot: {record_timeslot['val']}")
 
         # channel.update_environment()                                # 這裡的更新環境就是重撒 UE 的位置
         update_env_channel = channel.get_channel_coefficient()
         print(f"RISdata.py/Phase_state || Get Channel Coefficient at Timeslot {episode}: {update_env_channel[0][:1]}")
+        
+        # # ===== 若每個timeslot都要更新通道，必須開啟以下程式碼 =====
         # channel.update_channel(alpha_los=2, alpha_nlos=4, kapa=10, time_corrcoef=0)
         # after_update_channel = channel.get_channel_coefficient()        # test: check channel changed
-        # print(f"RISdata.py/Phase_state || Update UE position[0][:1] at Timeslot {record_timeslot}: {after_update_channel[0][:1]}...\n")    
+        # print(f"RISdata.py/Phase_state || Update UE position[0][:1] at Timeslot {record_timeslot}: {after_update_channel[0][:1]}...\n")   
+        # # ==========
     else:
-        print(f"RISdata.py/Phase_state || Error: record_timeslot {record_timeslot} > Timeslot {episode}.\n")
+        print(f"RISdata.py/Phase_state || Error: record_timeslot {record_timeslot['val']} > Timeslot {episode}.\n")
 
     Z_switch = torch.ones((1, num_elements), device=args.device)                     # blocking condition, a binary matrix
     # theta_random = torch.rand_like(Z_switch, device=args.device) * 2 * pi            # Generate random values in radians between 0 and 2pi
@@ -122,8 +128,8 @@ def Phase_state(episode, channel, beamformer, folder_name, num_elements, group_m
     # print(f'RISdata.py/Phase_state || device: {channel.device}\n')
 
     num_phases, phases_discrete = get_phase_config(args)
-    print(f"agent.py/init || num_phases: {num_phases}")
-    print(f"agent.py/init || phases_discrete: {phases_discrete}")
+    print(f"RISdata.py/Phase_state || num_phases: {num_phases}")
+    print(f"RISdata.py/Phase_state || phases_discrete: {phases_discrete}")
 
     # 初始化 phase
     if args.init_phase_method == 'random':
@@ -300,7 +306,7 @@ def Phase_state(episode, channel, beamformer, folder_name, num_elements, group_m
 
     # Save the Phase and UE of each timeslot to a CSV
     timestamp_folder = os.path.basename(folder_name)
-    save_timeslot_phase(episode, Phase_state, scenario, num_elements, timestamp_folder)
+    save_timeslot_phase(episode, Phase_state, scenario, num_elements, timestamp_folder, args)
 
     # Datarate
     if sinr_linear is not None:
@@ -316,7 +322,7 @@ def Phase_state(episode, channel, beamformer, folder_name, num_elements, group_m
 
     return(Phase_state, sinr_linear, sinr_db, datarate)
 
-def save_timeslot_phase(episode, Phase_state, scenario, num_elements, timestamp_folder):
+def save_timeslot_phase(episode, Phase_state, scenario, num_elements, timestamp_folder, args):
 
     global all_data, init_csv, saved_timeslots     # Store all timeslot data for single CSV export at the end
 
@@ -333,9 +339,14 @@ def save_timeslot_phase(episode, Phase_state, scenario, num_elements, timestamp_
     Phase_state_np = Phase_state.cpu().numpy()  # Convert tensor to NumPy and move to CPU
     # print(f"Phase_state_np.shape: {Phase_state_np.shape}\n")
 
-    # Save CSV path: Ensure the directory exists
-    random_csv_path = f'./generate_RIS/timeslot_phase/{scenario}/{timestamp_folder}'
-    os.makedirs(random_csv_path, exist_ok=True)
+    if args.multi_seed_run:
+        # Save CSV path: Ensure the directory exists
+        random_csv_path = f'./generate_RIS/timeslot_phase/seed_sweep/{scenario}/{timestamp_folder}'
+        os.makedirs(random_csv_path, exist_ok=True)
+    else:
+        # Save CSV path: Ensure the directory exists
+        random_csv_path = f'./generate_RIS/timeslot_phase/{scenario}/{timestamp_folder}'
+        os.makedirs(random_csv_path, exist_ok=True)
 
     # Clear existing CSV files on first execution
     if not init_csv:

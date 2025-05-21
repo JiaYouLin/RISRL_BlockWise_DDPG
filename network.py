@@ -783,7 +783,7 @@ class ReplayBuffer:
         return self.size
 
 # 將 DDPG 訓練的神經網路儲存
-def save_model(checkpoint, dt):
+def save_model(checkpoint, dt, args):
     """
     儲存完整的 DDPG 模型, 包括:
     - Actor Network
@@ -793,16 +793,22 @@ def save_model(checkpoint, dt):
     - Loss
     """
 
-    # 確保模型儲存目錄存在
-    save_path = './model/'
-    if not os.path.exists(save_path):
-        os.makedirs(save_path)
+    if args.multi_seed_run:
+        # 確保模型儲存目錄存在
+        save_path = './model/seed_sweep/'
+        if not os.path.exists(save_path):
+            os.makedirs(save_path)
+    else:
+        # 確保模型儲存目錄存在
+        save_path = './model/'
+        if not os.path.exists(save_path):
+            os.makedirs(save_path)
 
     # 確保 `dt` 沒有特殊字元, 例如 ":" (時間格式可能會包含)
     dt = dt.replace(":", "_").replace(" ", "_")
 
     # 檔案名稱
-    model_file = os.path.join(save_path, f"{dt}_DDPG_model.pth")
+    model_file = os.path.join(save_path, f"{dt}_seed_{args.seed_rl}_DDPG_model.pth")
 
     # 儲存 checkpoint
     th.save(checkpoint, model_file)

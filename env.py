@@ -55,7 +55,8 @@ class RISEnv:
         init_display_settings()
 
         # DEBUG
-        # print(f'env.py/reset || channel: {channel.get_channel_coefficient()}')
+        print(f'env.py/reset || channel: {channel.get_channel_coefficient()}')
+        print(f"env.py/reset || record_timeslot: {record_timeslot['val']}")
 
         state_before, sinr_before_linear, sinr_before_db, datarate_before = Phase_state(episode, channel, beamformer, folder_name, num_elements, group_mapping, args, record_timeslot)                             # 獲取這個timeslot的初始phase
         # print(f"env.py/reset || state_before: {state_before}")
@@ -110,7 +111,7 @@ class RISEnv:
 
         # 獲取通道係數
         get_channel = self.channel.get_channel_coefficient()
-        # print(f"env.py/step || Get Channel Coefficient[0][:1]: {get_channel[0][:1]}")
+        print(f"env.py/step || Get Channel Coefficient[0][:1]: {get_channel[0][:1]}")
 
         Z = torch.ones((1, num_elements), device=self.device)                               # blocking condition, a binary matrix
         # print(f"env.py/step || Z: {Z}")

@@ -190,7 +190,10 @@ def block_wise_phase_grouping(channel, beamformer, scenario, folder_name, num_el
 
     # 儲存至 CSV
     folder_name = folder_name.removeprefix('./csv/')
-    csv_path = f'./generate_RIS/block_wise_phase_grouping/{scenario}/{folder_name}_{count_tmp}'
+    if args.multi_seed_run:
+        csv_path = f'./generate_RIS/block_wise_phase_grouping/{scenario}/seed_sweep/{folder_name}_{count_tmp}'
+    else:
+        csv_path = f'./generate_RIS/block_wise_phase_grouping/{scenario}/{folder_name}_{count_tmp}'
     os.makedirs(csv_path, exist_ok=True)
 
     base_filename = f'block_wise_phase_grouping_{args.bits}-bits_{K}UE_{group_rows}x{group_cols}-blocks_{count_tmp}'
@@ -923,7 +926,11 @@ def channel_beam(channel, beamformer, scenario, folder_name, num_elements, h_ris
 
     folder_name = folder_name.removeprefix('./csv/')  # 去掉前綴 './csv/'
     print(f'folder_name: {folder_name}')
-    dir = f"./generate_RIS/channel_beam/{scenario}/{folder_name}"
+
+    if args.multi_seed_run:
+        dir = f"./generate_RIS/channel_beam/{scenario}/seed_sweep/{folder_name}"
+    else:
+        dir = f"./generate_RIS/channel_beam/{scenario}/{folder_name}"
     if not os.path.isdir(dir):
         os.makedirs(dir, exist_ok=True)
 
@@ -1019,7 +1026,6 @@ def run_seed_sweep_and_analyze(args):
 def main(args, folder_name=None):
 
     init_display_settings()
-
     # === 取得 scenario config ==
     wavelength, d_ris_elem, area, BS_pos, ris_size, ris_norm, ris_center, obstacles, centers, std, M, K, MU_mode, scale, ris_height, obs3 = scenario_configs(scenario)
 
@@ -1117,7 +1123,7 @@ def main(args, folder_name=None):
     print("======================================== Start Training =========================================")
 
     episode = 1                                                             # 初始化 episode(=timeslot), 尚桓設2
-    record_timeslot = 0
+    record_timeslot = {"val": 0}
 
     print(f"=========================== Initial phase state ============================")
     initial_phase_state, initial_sinr_linear, initial_sinr_db, datarate = Phase_state(episode, channel, beamformer, folder_name, num_elements, group_mapping, args, record_timeslot)  # 修改 Phase_state 以接受 channel
@@ -1144,6 +1150,7 @@ def main(args, folder_name=None):
             # print(f"step: {step}")
             # print(f"agent: {agent}")
             # print(f"num_elements: {num_elements}")
+            # print(f"record_timeslot: {record_timeslot['val']}")
 
             state_before, sinr_before_linear, sinr_before_db, datarate_before = env.reset(episode, agent, num_elements, channel, beamformer, group_mapping, folder_name, args, record_timeslot)
             # print(f"main.py/Training || state_before: {state_before}, type: {type(state_before)}")    
@@ -1156,6 +1163,14 @@ def main(args, folder_name=None):
             #     os.makedirs(dir, exist_ok=True)
             # channel.show(dir)
             # exit()      # test drawn_scenario
+
+            # # ===== FOR record_timeslot DEBUG =====
+            # if record_timeslot['val'] <= 4:
+            #     print(f"record_timeslot (<=4): {record_timeslot['val']}")
+            # else:
+            #     print(f"record_timeslot (>4): {record_timeslot['val']}")
+            #     exit()
+            # # ==========
 
             while temp_step < args.episode_length:
 
@@ -1265,7 +1280,7 @@ def main(args, folder_name=None):
                 checkpoint = DDPGAgt.getCheckpoint()
 
                 # 儲存模型
-                network.save_model(checkpoint, args.log_dir)
+                network.save_model(checkpoint, args.log_dir, args)
                 
                 # # 從 DDPGAgt 取得 Actor、Critic、Optimizer 以及 Loss
                 # ck_actor, ck_critic, ck_actor_target, ck_critic_target, \
@@ -1621,8 +1636,8 @@ if __name__ == '__main__':
         parser.add_argument('--init_phase_method', default='random', choices=['random', 'constructive'], help='Choose initial RIS phase method: random or constructive.')
         parser.add_argument('--fixed_ue', default=True, action='store_true', help='Use fixed UE positions')
         parser.add_argument('--neuron', default=256, type=int, help='Number of neurons in each layer')
-        parser.add_argument('--max_episodes', default=1000, type=int)           # 800 timeslot, default:501, train 0.7 testint 0.3
-        parser.add_argument('--episode_length', default=800, type=int)         # 400, temp_step
+        parser.add_argument('--max_episodes', default=1000, type=int)           # 1000 timeslot, default:501, train 0.7 testint 0.3
+        parser.add_argument('--episode_length', default=800, type=int)         # 800, temp_step
         parser.add_argument('--batch_size', default=512, type=int)              # batch size, 16 32 64 128
         
         # parser.add_argument('--lr', default=0.005, type=float)                   # learning rate: 0.1
