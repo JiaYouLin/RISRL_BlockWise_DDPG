@@ -341,7 +341,7 @@ def save_timeslot_phase(episode, Phase_state, scenario, num_elements, timestamp_
 
     if args.multi_seed_run:
         # Save CSV path: Ensure the directory exists
-        random_csv_path = f'./generate_RIS/timeslot_phase/seed_sweep/{scenario}/{timestamp_folder}'
+        random_csv_path = f'./generate_RIS/timeslot_phase/{scenario}/seed_sweep/{timestamp_folder}'
         os.makedirs(random_csv_path, exist_ok=True)
     else:
         # Save CSV path: Ensure the directory exists
