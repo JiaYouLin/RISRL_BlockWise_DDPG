@@ -1622,24 +1622,35 @@ if __name__ == '__main__':
 
     try:
         parser = argparse.ArgumentParser()                                      # 使用 argparse 定義和解析命令行參數
+
+        # ===【硬體與設備設定】===
         parser.add_argument('--cpu_core', default=None, type=int, help='Specify the CPU core to use')
+        parser.add_argument('--device', choices=['cuda', 'cpu'], default='cuda' if torch.cuda.is_available() else 'cpu', type=str)
+        parser.add_argument('--use_cuda', default=True, type=bool)
+        
+        # ===【Multi-Seed 實驗設定】===
         parser.add_argument('--multi_seed_run', default=True, action='store_true', help='Enable multiple random seeds run for averaging results')
         parser.add_argument('--multi_seed_min', default=0, type=int, help='Minimum value for random seed range')
         parser.add_argument('--multi_seed_max', default=10000, type=int, help='Maximum value for random seed range')
         parser.add_argument('--multi_seed_count', default=20, type=int, help='Number of random seeds to sample and run')
         
+        # ===【Random Seed 設定】===
         parser.add_argument('--seed_rl', default=None, type=int, help='Seed for RL model and training') # 沒有開啟 multi_seed_run 時, 這行會設定 random seed, 若為 None, 程式會自動 random.randint(0, 10000)
         parser.add_argument('--seed_channel', default=128, type=int, help='Seed for channel and environment')    
-        parser.add_argument('--device', choices=['cuda', 'cpu'], default='cuda' if torch.cuda.is_available() else 'cpu', type=str)
-        parser.add_argument('--use_cuda', default=True, type=bool)
 
+        # ===【初始環境設定】===
         parser.add_argument('--init_phase_method', default='random', choices=['random', 'constructive'], help='Choose initial RIS phase method: random or constructive.')
         parser.add_argument('--fixed_ue', default=True, action='store_true', help='Use fixed UE positions')
+
+        # ===【神經網路與訓練參數】===
         parser.add_argument('--neuron', default=256, type=int, help='Number of neurons in each layer')
+        parser.add_argument('--batch_size', default=512, type=int)              # batch size, 16 32 64 128
+
+        # ===【訓練輪數設定】===
         parser.add_argument('--max_episodes', default=1000, type=int)           # 1000 timeslot, default:501, train 0.7 testint 0.3
         parser.add_argument('--episode_length', default=800, type=int)         # 800, temp_step
-        parser.add_argument('--batch_size', default=512, type=int)              # batch size, 16 32 64 128
         
+        # ===【學習率與參數更新】===
         # parser.add_argument('--lr', default=0.005, type=float)                   # learning rate: 0.1
         parser.add_argument('--lr_actor', default=5e-4, type=float)           # Actor 學習率
         parser.add_argument('--lr_critic', default=5e-4, type=float)           # Critic 學習率, 通常比 actor 大 10 倍
@@ -1684,12 +1695,14 @@ if __name__ == '__main__':
         '''
         parser.add_argument('--policy_delay', default=20, type=int)              # 5, 每間隔 policy_delay 次更新 Actor
 
+        # ===【探索參數】===
         parser.add_argument('--exploration_rate', default=1.0, type=float)        # 1.0, 初始 100% 探索, 完全隨機選擇 phase, 幫助 RL 發現較好的動作
         parser.add_argument('--exploration_decay', default=0.995, type=float)     # 0.995, 每次訓練後探索率乘上這個值, 越高表示探索階段會更長
         parser.add_argument('--exploration_min', default= 0.1, type=float)       # 0.05, 最低探索率, 幾乎選擇最好的動作
         parser.add_argument('--ema_beta', default=0.8, type=float)                # 0.9, Exponential Moving Average (EMA) beta, 用來平滑 actor 和 critic 的 loss, 若越接近1表示記憶效果越長久(長期平均), 平滑程度高, 會以緩慢的速度逐漸追上新的reward; 越接近0表示更注重當前值(短期反應), 變動大, 會以較快的速度逐漸追上新的reward
         parser.add_argument('--gumbel_tau', default=1.0, type=float)        # Gumbel softmax temperature, 1.0
 
+        # ===【Replay Buffer 設定】===
         parser.add_argument('--buffer_size', default=int(1e7), type=int)        # buffer_size與batch_size對應: 1e4(64), 1e5(128), 1e6(256)
         # parser.add_argument('--exploration_noise', default=0.1, type=float)     # exploration noise, 0.1
         
@@ -1699,9 +1712,11 @@ if __name__ == '__main__':
         # parser.add_argument('--noise_std', default=0.6, type=float)             # 探索的標準差
         # parser.add_argument('--noise_decay', default=0.999, type=float)         # 噪聲衰減率
         
+        # ===【RIS 參數設定】===
         parser.add_argument("--bits", default=1,  type=int)                      # RIS phase shift bit count (2 bits (4), 4 bits (16), 6 bits (64), 8 bits (256))
         parser.add_argument("--group_size", default=(8,8), type=tuple)         # 設定 group size
 
+        # ===【模型儲存與載入】===
         parser.add_argument('--log_dir', default=datetime.datetime.now().strftime('%Y%m%d_%H%M%S'))
         parser.add_argument("--save_data", default=True, type=bool)             # loss , reward
         parser.add_argument("--save_model", default=True, type=bool)            # model
