@@ -1422,31 +1422,31 @@ def main(args, folder_name=None):
         # update_ue_env = channel.update_environment()
         # print(f"Update UE position: {update_ue_env}")
 
-    # # DEBUG: BEAM
-    # channel_beam(
-    #     channel=channel,
-    #     beamformer=beamformer,
-    #     scenario=scenario,
-    #     folder_name=folder_name,
-    #     num_elements=num_elements,
-    #     h_ris=ris_size[0],
-    #     w_ris=ris_size[1],
-    #     args=args,
-    #     d_ris_elem=d_ris_elem
-    # )
+    # DEBUG: BEAM
+    channel_beam(
+        channel=channel,
+        beamformer=beamformer,
+        scenario=scenario,
+        folder_name=folder_name,
+        num_elements=num_elements,
+        h_ris=ris_size[0],
+        w_ris=ris_size[1],
+        args=args,
+        d_ris_elem=d_ris_elem
+    )
 
-    # # 將RIS元素分成G個群組, 每組共享相同的phase, 遍歷所有組合, 計算每種組合的SINR和Datarate
-    # block_wise_phase_grouping(
-    #     channel=channel,
-    #     beamformer=beamformer,
-    #     scenario=scenario,
-    #     folder_name=folder_name,
-    #     num_elements=num_elements,
-    #     K=K,
-    #     device=args.device,
-    #     count_tmp=count_tmp,
-    #     args=args
-    # )
+    # 將RIS元素分成G個群組, 每組共享相同的phase, 遍歷所有組合, 計算每種組合的SINR和Datarate
+    block_wise_phase_grouping(
+        channel=channel,
+        beamformer=beamformer,
+        scenario=scenario,
+        folder_name=folder_name,
+        num_elements=num_elements,
+        K=K,
+        device=args.device,
+        count_tmp=count_tmp,
+        args=args
+    )
 
     # # 基於已知高SINR phase增添擾動擴展探索, 取得鄰近高SINR phase組合, 隨後計算高SINR組合的數量
     # known_highSINR_phase_sampling(
@@ -1629,7 +1629,7 @@ if __name__ == '__main__':
         parser.add_argument('--use_cuda', default=True, type=bool)
         
         # ===【Multi-Seed 實驗設定】===
-        parser.add_argument('--multi_seed_run', default=True, action='store_true', help='Enable multiple random seeds run for averaging results')
+        parser.add_argument('--multi_seed_run', default=False, action='store_true', help='Enable multiple random seeds run for averaging results')
         parser.add_argument('--multi_seed_min', default=0, type=int, help='Minimum value for random seed range')
         parser.add_argument('--multi_seed_max', default=10000, type=int, help='Maximum value for random seed range')
         parser.add_argument('--multi_seed_count', default=20, type=int, help='Number of random seeds to sample and run')
