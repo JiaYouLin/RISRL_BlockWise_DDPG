@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# main.py
+
 """
 尚桓共有27個agent (leader), 1個agent要做5個動作(5種訊息), 這5個動作裡面有16種方式(CQI)可以做
 我:

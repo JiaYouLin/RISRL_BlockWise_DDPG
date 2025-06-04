@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# networtk.py
+
 import torch
 import torch as th
 import torch.nn as nn
